@@ -5,17 +5,17 @@
 ## Table of Content
 
 1. Project Overview
-  - Context
-  - Actions
-  - Results
-  - Growth/Next Steps
+   1.1 Context
+   1.2 Actions
+   1.3 Results
+   1.4 Growth/Next Steps
 2. Concept Overview 
 3. Data Overview & Preparation
 4. Building the pipelines/platform (Application & Code)
-  - Creating the Worspaces and Deployment Pipeline
-  - Creating the Fabric items
-  - Running the Data pipeline
-  - Buidling Reports in Power BI
+   4.1 Creating the Worspaces and Deployment Pipeline
+   4.2 Creating the Fabric items
+   4.3 Running the Data pipeline
+   4.4 Buidling Reports in Power BI
 5. Ensure Data Governance - ISO 42001  
 6. ML Modelling Overview
 7. Summary & Analysing the results
@@ -26,10 +26,10 @@
 
 In this project, we demonstrate how to create a ...... that combines Fabric with Power Platforms and shows the main concepts of Data Science incl. ISO42001 and Reporting with Power BI
 
-### 1.0 Context
+### 1.1 Context
 We want a One Platform Solution that integrates our  daily operational work with Power Platfom applications to gain insights out of this data using ML and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by repecting data quality and data governance regulatins and rules   
 
-### 1.1 Actions
+### 1.2 Actions
 We build a Platform that:
   - Loads Data from the Dataverse (Power Platform) into a Bronze Lakehouse
   - Clean data using a notebook to do data wrangling (nb_DataWrangling)
@@ -39,7 +39,7 @@ We build a Platform that:
   - Load data into gold layer to aggregate data for Reporting reasons
   ....
 
-###1.2 Results
+### 1.3 Results
 The final pipeline/platform:
    - automaticly loads an transforms data from daily data out of Dataverse (Power Apps) into a Fabric Lakehouse  
    - automaticlly cleans and validates data from Dataverse in regards to ISO 42001 
@@ -48,7 +48,7 @@ The final pipeline/platform:
 
   This helps the management to get aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future
 
-1.3 Growth & Next Steps
+### 1.4 Growth & Next Steps
 More Applications from Power platform or other Ddta sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
 Furthermore ... 
 
@@ -56,20 +56,22 @@ Furthermore ...
 
 ## 2. Concept Overview
 
-###Power Platform is
+### Power Platform/Apps
+is
 
-###Fabric is
+### Fabric 
+is
 
-###Data Cleaning
-####Great Expectations is ..
+### Data Cleaning
+#### Great Expectations is ..
 
-###ML Modelling:
+### ML Modelling:
 We use ....  
 
-####MLFlow 
+#### MLFlow 
 MLFlow is ...
 
-####Fairlearn 
+#### Fairlearn 
 Fairlearn is ..
 
 #### Evidently AI
@@ -80,15 +82,15 @@ Evidently is ...
 
 ##  3. Data Overview & Preparation
 
-###The dataset 
+### The dataset 
 contains informations about the customers and their churn from a telecom company.
 The data is collected on a daily base by the employees how are dealing with the customer day by day.
 There are currently 5,000+ customers in the relevant dataset used for analyse the churn behaviour of the clients 
 
-###Fabric Notebook
+### Fabric Notebook
 We use a Fabric notebook to load the data from the bronze lakehouse and do the data wrangling. 
 
-###Power BI Reports
+### Power BI Reports
 We build 10+ Dax Measures to mainly aggreagte 
 
 
@@ -110,21 +112,11 @@ We build 10+ Dax Measures to mainly aggreagte
 | **Reporting** | Power BI Desktop/Service | Dashboards & reports |
 | **Governance** | Fabric Admin Portal | Security & lineage |
 
-### End-to-end analytics solution combining:
-- **a. Deployment Pipeline for Development to Production**
-- **b. Full Medallion Lakehouse**: Bronze/Silver/Gold
-- **c. Dual-Path Pipleine**: Data Science/ML + BI/Analytics for Reporting Insights 
-- **d. Enterprise Security**: Row-Level Security (RLS), Object-Level Security (OLS)
-- **e. ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using Great expecations (DataQuality/-Governance - Annex A.4.3), 
-                                                                           MLFlow (Audit Trails - Clause 7.5), 
-                                                                           Fairlearn (Fairness - Annex A.5) and   
-                                                                           Evidently AI (Model Validation/- Drift - Annex A.7) 
 
 
 
 
-
- **a. Deployment Pipeline**
+### 4.1 Creating the Worspaces and Deployment Pipeline
 
 ![Screenshot](images/DDI%20Deployment%20Pipeline.png)
 
@@ -155,10 +147,9 @@ We build 10+ Dax Measures to mainly aggreagte
    ② Fix transformation logic
    ③ Redeploy to Test and Production
 
+### 4.2 Creating the Fabric items
 
-
-
-**b. Medallion Lakehouse Architecture**
+**1. Medallion Lakehouse Architecture**
 
 **Bronze Layer** (Raw Data)
 - Direct copies from Dataverse
@@ -177,25 +168,32 @@ We build 10+ Dax Measures to mainly aggreagte
 - Pre-aggregated metrics
 - Optimized for Semantic Model
 
+**2. Notebooks**
+   
+**3. Email Notifications**
 
-c. Dual Path Pipeline 
+### 4.3 Running the Data pipeline
 ![Screenshot](images/DDI%20Pipeline%20DataFlow.png)
+   
+### 4.4 Buidling Reports in Power BI
 
 
+### 5. Ensure Security, Data Governance - ISO 42001
 
-5. Ensure Security, Data Governance - ISO 42001
-
-### 5. Security & Governance
 - **Row-Level Security (RLS)**: Filter by 
 - **Object-Level Security (OLS)**: Hide sensitive measures
 - **Impact Analysis**: Understand measure dependencies
 - **Audit Logging**: Track data access & changes
 - **Workspace Roles**: Admin, contributor, viewer permissions
+- **Enterprise Security**: Row-Level Security (RLS), Object-Level Security (OLS)
+- **ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using Great expecations (DataQuality/-Governance - Annex A.4.3), 
+                                                                           MLFlow (Audit Trails - Clause 7.5), 
+                                                                           Fairlearn (Fairness - Annex A.5) and   
+                                                                           Evidently AI (Model Validation/- Drift - Annex A.7) 
 
+### 6. ML Modelling Overview
 
-6. ML Modelling Overview
-
-- referenzieren ML CustomerChurn Notebook 
+--> You can find the Notbook under notebooks/ML_CustomerChurn-1821.ipynb
 
 1. Load and Data Preparation/Transformation
 ![Screenshot](images/.png)
