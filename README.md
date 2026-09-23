@@ -5,17 +5,17 @@
 ## Table of Content
 
 1. Project Overview
-   1.1 Context
-   1.2 Actions
-   1.3 Results
-   1.4 Growth/Next Steps
+ 1.1 Context
+ 1.2 Actions
+ 1.3 Results
+ 1.4 Growth/Next Steps
 2. Concept Overview 
 3. Data Overview & Preparation
 4. Building the pipelines/platform (Application & Code)
-   4.1 Creating the Worspaces and Deployment Pipeline
-   4.2 Creating the Fabric items
-   4.3 Running the Data pipeline
-   4.4 Buidling Reports in Power BI
+ 4.1 Creating the Worspaces and Deployment Pipeline
+ 4.2 Creating the Fabric items
+ 4.3 Running the Data pipeline
+ 4.4 Buidling Reports in Power BI
 5. Ensure Data Governance - ISO 42001  
 6. ML Modelling Overview
 7. Summary & Analysing the results
