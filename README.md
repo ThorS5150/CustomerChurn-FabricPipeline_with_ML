@@ -121,25 +121,25 @@ We build 10+ Dax Measures to mainly aggreagte
 | **Governance** | Fabric Admin Portal | Security & lineage |
 
 
-### 4.1 Creating the Worspaces and Deployment Pipeline
+### 4.1 Creating the Workspaces and Deployment Pipeline
 
 ![Screenshot](images/DDI%20Deployment%20Pipeline.png)
 
-1. DEVELOPMENT
+1. DEVELOPMENT Workspace
    → Develop Data Factory Pipeline
    → Bronze (raw) → Silver (clean) → Gold (analytics)
    → Transformation Code versioned in Git
    → Semantic Model + Power BI (Dev versions)
    → All debugging & experimentation
 
-2. TESTING
+2. TESTING Workspace
    → Deploy Data Factory Pipeline
    → Validate Semantic Model relationships
    → Test RLS rules & security
    → Performance testing
    → Approve for Production
 
-3. PRODUCTION
+3. PRODUCTION Workspace
    → Deploy Data Factory Pipeline
    → Deploy optimized Semantic Model
    → Deploy Power BI Reports/Dashboaords and publish in Power BI Service
@@ -155,32 +155,39 @@ We build 10+ Dax Measures to mainly aggreagte
 ### 4.2 Creating the Fabric items
 
 **1. Pipeline**
+Use of the Pipeline item to orchestrate a DataFlow
+
 **2. Copy job**
-   In the settings of the pipeline we set Retry to 3 with a retry intervall of 60 sec. We do this to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
+In the settings of the pipeline we set Retry to 3 with a retry intervall of 60 sec. We do this to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
 
 **3. Lakehouse**
-with a edallion architecture of
+with a medallion architecture of:
 
-**Bronze Layer** (Raw Data)
+*Bronze Layer* (Raw Data)
 - Direct copies from Dataverse
 - 100% data lineage preserved
 - No transformations
 - Used for debugging & auditing
 
-**Silver Layer** (Cleaned Data)
+*Silver Layer* (Cleaned Data)
 - Deduplication & null handling
 - Business rules applied
 - Data quality/ISO 42001 validation gates with Great Expectations
 - Conformed dimensions for consistency
 
-**Gold Layer** (Analytics Ready)
+*Gold Layer* (Analytics Ready)
 - Star schema fact & dimension tables
 - Pre-aggregated metrics
 - Optimized for Semantic Model
 
 **4. Notebooks**
+We have several notebooks 
+- nbWrangling-Notebook for data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with Great Expecatations (by Notebook nb_ValidationWithGreatEcpectations)
+- Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
+- In the next step we use the cleaned data to aggregate data to be ready for the gold layer (Analytics) 
    
 **5. Email Notifications**
+There is a email notification after each pipeline run to the responsible admin with the information if the pipeline run successfully or failed.
 
 ### 4.3 Running the Data pipeline
 We run the pipeline on a daily refresh at 6am to guaranty having fresh data for the start of the work day
