@@ -122,7 +122,7 @@ We build 10+ Dax Measures to mainly aggreagte
 
  **a. Deployment Pipeline**
 
-![Screenshot](images/DDI Deployment Pipeline.png)
+![Screenshot](images/DDI%20Deployment%20Pipeline.png)
 
 1. DEVELOPMENT
    → Develop Data Factory Pipeline
@@ -175,7 +175,7 @@ We build 10+ Dax Measures to mainly aggreagte
 
 
 c. Dual Path Pipeline 
-![Screenshot](images/DDI%20Library%20Great%20Expectations.png)
+![Screenshot](images/DDI%20Pipeline%20DataFlow.png)
 
 
 
@@ -194,11 +194,17 @@ c. Dual Path Pipeline
 - referenzieren ML CustomerChurn Notebook 
 
 1. Load and Data Preparation/Transformation
-2. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
-3. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection 
-4. Compare Model 1 & 2
-5. Use of Fairlearn for Fairness
-6. Evidently Report for Drifitng
+![Screenshot](images/.png)
+3. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+![Screenshot](images/.png)
+5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+![Screenshot](images/.png)
+7. Compare Model 1 & 2
+![Screenshot](images/.png)
+9. Use of Fairlearn for Fairness
+![Screenshot](images/.png)
+11. Evidently Report for Drifitng
+--> See "evidently_report.html" in folder reports
 
 ### 3. Data Science Path (Lakehouse + Python)
 - **Lakehouse**: Silver tables in table format
