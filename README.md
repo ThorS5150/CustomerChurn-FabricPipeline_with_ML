@@ -5,10 +5,10 @@
 ## Table of Content
 
 1. Project Overview
- 1.1 Context
- 1.2 Actions
- 1.3 Results
- 1.4 Growth/Next Steps
+ - 1.1 Context
+ - 1.2 Actions
+ - 1.3 Results
+ - 1.4 Growth/Next Steps
 2. Concept Overview 
 3. Data Overview & Preparation
 4. Building the pipelines/platform (Application & Code)
