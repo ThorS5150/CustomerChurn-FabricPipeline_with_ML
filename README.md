@@ -26,11 +26,11 @@
 
 In this project, we demonstrate how to create a ...... that combines Fabric with Power Platforms and shows the main concepts of Data Science incl. ISO42001 and Reporting with Power BI
 
- 1.0 Context
-  We want a One Platform Solution that integrates our  daily operational work with Power Platfom applications to gain insights out of this data using ML and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by repecting data quality and data governance regulatins and rules   
+### 1.0 Context
+We want a One Platform Solution that integrates our  daily operational work with Power Platfom applications to gain insights out of this data using ML and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by repecting data quality and data governance regulatins and rules   
 
- 1.1 Actions
-  We build a Platform that:
+### 1.1 Actions
+We build a Platform that:
   - Loads Data from the Dataverse (Power Platform) into a Bronze Lakehouse
   - Clean data using a notebook to do data wrangling (nb_DataWrangling)
   - Validate Data in bronze layer with Great Expectations before laoding data into silver layer
@@ -39,8 +39,8 @@ In this project, we demonstrate how to create a ...... that combines Fabric with
   - Load data into gold layer to aggregate data for Reporting reasons
   ....
 
-1.2 Results
-  The final pipeline/platform:
+###1.2 Results
+The final pipeline/platform:
    - automaticly loads an transforms data from daily data out of Dataverse (Power Apps) into a Fabric Lakehouse  
    - automaticlly cleans and validates data from Dataverse in regards to ISO 42001 
    - daily updates the ML model and checks ISO 42001 conformity
@@ -48,28 +48,31 @@ In this project, we demonstrate how to create a ...... that combines Fabric with
 
   This helps the management to get aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future
 
-1.3 More Applications from Power platform or other Ddta sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
-    Furthermore ... 
-
-
+1.3 Growth & Next Steps
+More Applications from Power platform or other Ddta sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
+Furthermore ... 
 
 
 
 ## 2. Concept Overview
 
-Power Platform is
+###Power Platform is
 
-Fabric is
+###Fabric is
 
-ML Modelling:
+###Data Cleaning
+####Great Expectations is ..
+
+###ML Modelling:
 We use ....  
 
+####MLFlow 
 MLFlow is ...
 
-Great Expectations is ..
-
+####Fairlearn 
 Fairlearn is ..
 
+#### Evidently AI
 Evidently is ...
 
 
@@ -77,14 +80,15 @@ Evidently is ...
 
 ##  3. Data Overview & Preparation
 
-The dataset contains informations about the customers and their churn from a telecom company.
+###The dataset 
+contains informations about the customers and their churn from a telecom company.
 The data is collected on a daily base by the employees how are dealing with the customer day by day.
 There are currently 5,000+ customers in the relevant dataset used for analyse the churn behaviour of the clients 
 
-- Fabric Notebook
+###Fabric Notebook
 We use a Fabric notebook to load the data from the bronze lakehouse and do the data wrangling. 
 
-- Powr BI Reports
+###Power BI Reports
 We build 10+ Dax Measures to mainly aggreagte 
 
 
