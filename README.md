@@ -175,7 +175,7 @@ We build 10+ Dax Measures to mainly aggreagte
 
 
 c. Dual Path Pipeline 
-![Screenshot](images/DDI Pipeline DataFlow.png)
+![Screenshot](images/DDI%20Library%20Great%20Expectations.png)
 
 
 
