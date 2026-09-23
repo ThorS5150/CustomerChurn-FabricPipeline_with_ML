@@ -43,8 +43,8 @@ We build a Platform that:
 The final pipeline/platform:
    - automaticly loads an transforms data from daily data out of Dataverse (Power Apps) into a Fabric Lakehouse  
    - automaticlly cleans and validates data from Dataverse in regards to ISO 42001 
-   - daily updates the ML model and checks ISO 42001 conformity
-   - daily updates all reports and semantic models 
+   - daily updates the ML model and checks for ISO 42001 conformity
+   - daily updates all semantic models/reports 
 
   This helps the management to get aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future
 
@@ -85,10 +85,18 @@ Evidently is ...
 ### The dataset 
 contains informations about the customers and their churn from a telecom company.
 The data is collected on a daily base by the employees how are dealing with the customer day by day.
-There are currently 5,000+ customers in the relevant dataset used for analyse the churn behaviour of the clients 
+There are currently 5,000+ customers in the relevant dataset used for analyse the churn behaviour of the clients.
+This datasets are part of a user interface in Power Apps and giving insides about the churn of the customers of the company
 
 ### Fabric Notebook
-We use a Fabric notebook to load the data from the bronze lakehouse and do the data wrangling. 
+We use a Fabric notebook inside the pipeline to load the data from the bronze lakehouse and do the data cleaning.
+ 
+Details will be explained in 4.2. You can also find the notebooks:
+ - nb_DataWrangling
+ - nb_SetupDataContext_with_GreatExpectations
+ - nb_ValidationWithGreatExpectations
+
+in the folder notebooks accordingly.
 
 ### Power BI Reports
 We build 10+ Dax Measures to mainly aggreagte 
@@ -111,9 +119,6 @@ We build 10+ Dax Measures to mainly aggreagte
 | **Semantic Layer** | Fabric Semantic Model | Star schema + DAX |
 | **Reporting** | Power BI Desktop/Service | Dashboards & reports |
 | **Governance** | Fabric Admin Portal | Security & lineage |
-
-
-
 
 
 ### 4.1 Creating the Worspaces and Deployment Pipeline
@@ -149,7 +154,12 @@ We build 10+ Dax Measures to mainly aggreagte
 
 ### 4.2 Creating the Fabric items
 
-**1. Medallion Lakehouse Architecture**
+**1. Pipeline**
+**2. Copy job**
+   In the settings of the pipeline we set Retry to 3 with a retry intervall of 60 sec. We do this to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
+
+**3. Lakehouse**
+with a edallion architecture of
 
 **Bronze Layer** (Raw Data)
 - Direct copies from Dataverse
@@ -168,11 +178,12 @@ We build 10+ Dax Measures to mainly aggreagte
 - Pre-aggregated metrics
 - Optimized for Semantic Model
 
-**2. Notebooks**
+**4. Notebooks**
    
-**3. Email Notifications**
+**5. Email Notifications**
 
 ### 4.3 Running the Data pipeline
+We run the pipeline on a daily refresh at 6am to guaranty having fresh data for the start of the work day
 ![Screenshot](images/DDI%20Pipeline%20DataFlow.png)
    
 ### 4.4 Buidling Reports in Power BI
@@ -186,10 +197,11 @@ We build 10+ Dax Measures to mainly aggreagte
 - **Audit Logging**: Track data access & changes
 - **Workspace Roles**: Admin, contributor, viewer permissions
 - **Enterprise Security**: Row-Level Security (RLS), Object-Level Security (OLS)
-- **ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using Great expecations (DataQuality/-Governance - Annex A.4.3), 
-                                                                           MLFlow (Audit Trails - Clause 7.5), 
-                                                                           Fairlearn (Fairness - Annex A.5) and   
-                                                                           Evidently AI (Model Validation/- Drift - Annex A.7) 
+- **ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using
+     - Great expecations (DataQuality/-Governance - Annex A.4.3), 
+     - MLFlow (Audit Trails - Clause 7.5), 
+     - Fairlearn (Fairness - Annex A.5) and   
+     - Evidently AI (Model Validation/- Drift - Annex A.7) 
 
 ### 6. ML Modelling Overview
 
@@ -208,24 +220,9 @@ We build 10+ Dax Measures to mainly aggreagte
 11. Evidently Report for Drifitng
 --> See "evidently_report.html" in folder reports
 
-### 3. Data Science Path (Lakehouse + Python)
-- **Lakehouse**: Silver tables in table format
-- **Python Notebooks**: DataWrangler, pandas, 
-- **Exploratory Analysis**: Ad-hoc data investigation
-- **Feature Engineering**: ML-ready datasets | Hyperparameter tuning | Feature Selection
-   - Notebook- ML Customer Churn
-- **Output**: ML models for production, Evideltly Report 
 
 
-7. Summary & Analysing the results
-
-
-
-### 4. BI/Analytics Path (Semantic Model - Star schema + Power BI)
-- **Lakehouse**: Medallion architecture with Gold optimization
-- **Semantic Model**: Star schema (1 fact table, 5+ dimensions)
-- **DAX Measures**: 10+ calculations
-- **Power BI Reports**: Sales, customer, ..
+### 7. Summary & Analysing the results
 
 
 
