@@ -270,15 +270,19 @@ tbd
 ![Screenshot](images/DDI_ML_Baseline.png)
    
 4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+
 ![Screenshot](images/ModelRF.png)
 
 5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+
 ![Screenshot](images/ModelXGBoost.png)
 
 6. Compare Model 1 & 2
+
 ![Screenshot](images/.png)
 
 7. Use of Fairlearn for Fairness
+
 ![Screenshot](images/Fairlearn.png)
 
 
