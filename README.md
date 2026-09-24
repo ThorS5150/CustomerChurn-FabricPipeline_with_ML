@@ -262,21 +262,23 @@ tbd
 --> You can find the Notbook under notebooks/ML_CustomerChurn-1821.ipynb
 
 1. Load and Data Preparation/Transformation
+   
 ![Screenshot](images/.png)
 
-2. Baseline for check of model drifting with Evidently
+3. Baseline for check of model drifting with Evidently
+   
 ![Screenshot](images/DDI_ML_Baseline.png)
    
-3. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
 ![Screenshot](images/ModelRF.png)
 
-4. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
 ![Screenshot](images/ModelXGBoost.png)
 
-5. Compare Model 1 & 2
+6. Compare Model 1 & 2
 ![Screenshot](images/.png)
 
-6. Use of Fairlearn for Fairness
+7. Use of Fairlearn for Fairness
 ![Screenshot](images/Fairlearn.png)
 
 
