@@ -223,7 +223,7 @@ We connect several notebooks in the pipeline:
 - **nb_ML_Drift_Detection**
   This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before.
   Therefore we use Evidently
-  ![Screenshot](images/Evidently.png)
+![Screenshot](images/Evidently.png)
 
 You can find these notebooks in the folder "notebooks" accordingly.
 
