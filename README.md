@@ -24,17 +24,13 @@
 
 ##  1. Project Overview
 
-In this project, we demonstrate how to create a platform that can handle customer churn by using Fabric with Power Platforms and Power BI. 
-We use this to show the main concepts of Data Analysis & Data-Science with ML, do reporting with Power BI and respecting Data and AI Governance based on ISO 42001.
+In this project, we demonstrate how to create a ...... that combines Fabric with Power Platforms and shows the main concepts of Data Science incl. ISO42001 and Reporting with Power BI
 
-### 1.1 Context
-Customer churn is the single largest revenue leak for companies. Acquiring a new customer costs up to 20× more than retaining an existing one. So this is a common business problem and why it is important to understand  customers behaviour.
+ 1.0 Context
+  We want a One Platform Solution that integrates our  daily operational work with Power Platfom applications to gain insights out of this data using ML and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by repecting data quality and data governance regulatins and rules   
 
-### 1.2 Actions
-We create a "One Platform Solution" with Fabric that integrates the daily operational work within a Power Platform applications to gain insights out of this data using a ML Model and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by additionally respecting data quality and data governance regulations and rules (ISO 42001).
-Based on this insides we can launch marketing campaigns with new offers to target current clients who are very likely to end the contract.  
-
-The Platform/Fabric Solution does the follwing:
+ 1.1 Actions
+  We build a Platform that:
   - Loads Data from the Dataverse (Power Platform) into a Bronze Lakehouse
   - Clean data using data wrangling in a notebook (nb_DataWrangling)
   - Validate Data in the bronze layer with Great Expectations before loading data into the silver layer
@@ -48,17 +44,13 @@ The Platform/Fabric Solution does the follwing:
 The final pipeline/platform:
    - automaticly loads an transforms data from daily data out of Dataverse (Power Apps) into a Fabric Lakehouse  
    - automaticlly cleans and validates data from Dataverse in regards to ISO 42001 
-   - If the customer data changes so significantly tomorrow that the mathematical pattern no longer matches the model, Evidently raises an alarm (drift_detected = True). The pipeline initiates training, the model learns
-     the new patterns, and the original_training_data is updated so that the drift check has an up-to-date baseline for comparison from the day after tomorrow onwards
-   - updates the ML model (training and testing with new data) if drift is detected and checks for ISO 42001 conformity
-   - daily updates all semantic models/reports
-   - 
+   - daily updates the ML model and checks ISO 42001 conformity
+   - daily updates all reports and semantic models 
 
-  This helps the management to get asap aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future.
+  This helps the management to get aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future
 
-### 1.4 Growth & Next Steps
-More Applications from Power platform or other data sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
-Furthermore ... 
+1.3 More Applications from Power platform or other Ddta sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
+    Furthermore ... 
 
 
 
@@ -70,26 +62,9 @@ is
 ### Fabric 
 is
 
-### Data Cleaning
-#### Great Expectations is ..
+ML Modelling:
+We use ....  
 
-### ML Modelling:
-We use two different ML models  
-
-### Pipeline
-
-### Hypertuning
-
-### Feature Selection
-
-### Metrics
-
-   - ##### Accuraccy
-   - ##### Precission
-   - ##### f1 score
-   - ##### roc_auc
-
-#### MLFlow 
 MLFlow is ...
 
 #### Fairlearn 
@@ -103,31 +78,14 @@ Evidently is ...
 
 ##  3. Data Overview & Preparation
 
-### The dataset 
-In the daily business database, which is part of a bigger Power App Application, we have a table named "customerchurn" (to showcase the concept we used the Kaggle customer churn dataset wich can be found at https://www.kaggle.com/code/vanshkumar007/telco-churn-decoded-from-data-to-retention-strat ) that contains information about the customers churn over the last years. The column (Boolean type) within the dataset is called Churn. Since the dataset was a complete dataset we produced some missing data to be handled afterwards.
-The data set includes information about:
-  - customerid
-  - gender
-  - Senior Citizen
-  - tenure
-  - Phone Services
-  - ....
+The dataset contains informations about the customers and their churn from a telecom company.
+The data is collected on a daily base by the employees how are dealing with the customer day by day.
+There are currently 5,000+ customers in the relevant dataset used for analyse the churn behaviour of the clients 
 
+- Fabric Notebook
+We use a Fabric notebook to load the data from the bronze lakehouse and do the data wrangling. 
 
-The data is collected on a daily base by the employees how are dealing with the customer on a day by day base.
-There are currently 5,000+ customers in the relevant dataset used to analyse the churn behaviour of the clients.
-
-### Fabric Notebook
-We use Fabric notebooks inside the pipeline to load the data from the bronze Lakehouse and do the data cleaning & validation.
- 
-Details will be explained in 4.2. You can also find the notebooks:
- - nb_DataWrangling
- - nb_SetupDataContext_with_GreatExpectations
- - nb_ValidationWithGreatExpectations
-
-in the folder "notebooks" accordingly.
-
-### Power BI Reports
+- Powr BI Reports
 We build 10+ Dax Measures to mainly aggreagte 
 For reporting and analytics a star schema is used with the customer churn as Fact table and 5+ Dim tables (used within the daily business Power Apps application)
 
@@ -150,7 +108,21 @@ Here a short overview of which Technology we use for which layer and what the pu
 | **Governance** | Notebook & Fabric Admin Portal | ISO42001 & Security & lineage |
 
 
-### 4.1 Creating the Workspaces and Deployment Pipeline
+### End-to-end analytics solution combining:
+- **a. Deployment Pipeline for Development to Production**
+- **b. Full Medallion Lakehouse**: Bronze/Silver/Gold
+- **c. Dual-Path Pipleine**: Data Science/ML + BI/Analytics for Reporting Insights 
+- **d. Enterprise Security**: Row-Level Security (RLS), Object-Level Security (OLS)
+- **e. ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using Great expecations (DataQuality/-Governance - Annex A.4.3), 
+                                                                           MLFlow (Audit Trails - Clause 7.5), 
+                                                                           Fairlearn (Fairness - Annex A.5) and   
+                                                                           Evidently AI (Model Validation/- Drift - Annex A.7) 
+
+
+
+
+
+ **a. Deployment Pipeline**
 
 ![Screenshot](images/DDI%20Deployment%20Pipeline.png)
 
@@ -209,30 +181,15 @@ with a medallion architecture of:
 - Pre-aggregated metrics
 - Optimized for Semantic Model
 
-**4. Notebooks**
-We have several notebooks 
-- nbWrangling-Notebook for data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with Great Expecatations (by Notebook nb_ValidationWithGreatEcpectations)
-![Screenshot](images/DDI%20Deployment%20Pipeline.png)
-- Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
-- In the next step we use the cleaned data to aggregate data to be ready for the gold layer (Analytics) 
-   
-**5. Email Notifications**
-There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or failed.
 
-**6. External Libraries**
-![Screenshot](images/DDI%20external%20libraries.png)
+c. Dual Path Pipeline 
+![Screenshot](images/DDI DDI Pipeline DataFlow.png)
 
 
-### 4.3 Running the Data pipeline
-We run the pipeline on a daily refresh at 6am to guaranty having fresh data for the start of the work day
-![Screenshot](images/DDI%20Pipeline.png)
-   
-### 4.4 Buidling Reports in Power BI
 
-tbd
+5. Ensure Security, Data Governance - ISO 42001
 
-### 5. Ensure Security, Data Governance - ISO 42001
-
+### 5. Security & Governance
 - **Row-Level Security (RLS)**: Filter by 
 - **Object-Level Security (OLS)**: Hide sensitive measures
 - **Impact Analysis**: Understand measure dependencies
@@ -250,24 +207,30 @@ tbd
 --> You can find the Notbook under notebooks/ML_CustomerChurn-1821.ipynb
 
 1. Load and Data Preparation/Transformation
-![Screenshot](images/.png)
+2. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+3. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection 
+4. Compare Model 1 & 2
+5. Use of Fairlearn for Fairness
+6. Evidently Report for Drifitng
 
-2. Baseline for check of model drifting with Evidently
-3. ![Screenshot](images/DDI_ML_Baseline.png)
-4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
-![Screenshot](images/.png)
-5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
-![Screenshot](images/.png)
-7. Compare Model 1 & 2
-![Screenshot](images/.png)
-9. Use of Fairlearn for Fairness
-![Screenshot](images/.png)
-11. Evidently Report for Drifitng
---> See "evidently_report.html" in folder reports
-
+### 3. Data Science Path (Lakehouse + Python)
+- **Lakehouse**: Silver tables in table format
+- **Python Notebooks**: DataWrangler, pandas, 
+- **Exploratory Analysis**: Ad-hoc data investigation
+- **Feature Engineering**: ML-ready datasets | Hyperparameter tuning | Feature Selection
+   - Notebook- ML Customer Churn
+- **Output**: ML models for production, Evideltly Report 
 
 
-### 7. Summary & Analysing the results
+7. Summary & Analysing the results
+
+
+
+### 4. BI/Analytics Path (Semantic Model - Star schema + Power BI)
+- **Lakehouse**: Medallion architecture with Gold optimization
+- **Semantic Model**: Star schema (1 fact table, 5+ dimensions)
+- **DAX Measures**: 10+ calculations
+- **Power BI Reports**: Sales, customer, ..
 
 
 
