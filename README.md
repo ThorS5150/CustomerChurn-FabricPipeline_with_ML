@@ -117,17 +117,15 @@ The data is collected on a daily base by the employees how are dealing with the 
 There are currently 5,000+ customers in the relevant dataset used to analyse the churn behaviour of the clients.
 
 ### Fabric Notebook
-We use Fabric notebooks inside the pipeline to load the data from the bronze Lakehouse and do the data cleaning & validation.
- 
-Details will be explained in 4.2. You can also find the notebooks:
+We use the following Fabric notebooks inside the pipeline to load the data from the bronze Lakehouse and do the data cleaning & validation.
  - nb_DataWrangling
  - nb_SetupDataContext_with_GreatExpectations
  - nb_ValidationWithGreatExpectations
-
-in the folder "notebooks" accordingly.
+ 
+Details will be explained in **Topic 4.2**. 
 
 ### Power BI Reports
-We build 10+ Dax Measures to mainly aggreagte 
+We build 10+ Dax Measures to mainly aggreagte ... 
 For reporting and analytics a star schema is used with the customer churn as Fact table and 5+ Dim tables (used within the daily business Power Apps application)
 
 ## 4. Building the Pipelines (Application & Code)
@@ -183,13 +181,13 @@ Here a short overview of which Technology we use for which layer and what the pu
 ### 4.2 Creating the Fabric items
 
 **1. Pipeline**
-Use of the Pipeline item to orchestrate a DataFlow
+Use of the Pipeline item to orchestrate the DataFlow
 
 **2. Copy job**
-In the settings of the pipeline we set Retry to 3 with a retry intervall of 60 sec. We do this to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
+In the settings of the pipeline we set Retry to 3 with a retry interval of 60 sec. We do this for all items to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
 
 **3. Lakehouse**
-with a medallion architecture of:
+We build a Lakehouse with a medallion architecture of:
 
 *Bronze Layer* (Raw Data)
 - Direct copies from Dataverse
@@ -209,24 +207,26 @@ with a medallion architecture of:
 - Optimized for Semantic Model
 
 **4. Notebooks**
-We have several notebooks in the pipeline:
-- **nb_Wrangling**-Notebook is used for the first data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with GreatExpecatations (by Notebook nb_ValidationWithGreatEcpectations)
-![Screenshot](images/DDI.png)
+We connect several notebooks in the pipeline:
 
-- In the next step we use the cleaned data to aggregate data to be ready for the gold layer (Analytics)
+- The **nb_Wrangling**-Notebook is used for the first data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with GreatExpecatations (by Notebook
+  nb_ValidationWithGreatEcpectations) before stored in the table of the silver layer
 - **nb_ValidationWithGreatExpectations**
   Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
 - **nb_SetupDataContext_with_GreatExpectations**
+  To setup the GreatExpectations suite to do the validation with new data coming into the pipeline we use this notebook, which is only executed if there is no checkpoint in place 
+- **nb_Transform_SilverToGold**
+  In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
 - **ML_CustomerChurn-1821**
   This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn.
   For details please see Topic 6 **ML Modelling Overview**
-- **nb_Transform_SilverToGold**
-  In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
 - **nb_ML_Drift_Detection**
   This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before.
   Therefore we use Evidently
   ![Screenshot](images/Evidently.png)
-   
+
+You can find these notebooks in the folder "notebooks" accordingly.
+
 **5. Email Notifications**
 There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or not.
 
