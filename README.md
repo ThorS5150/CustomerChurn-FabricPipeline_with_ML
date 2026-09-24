@@ -221,11 +221,11 @@ We connect several notebooks in the pipeline:
   This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn.
   For details please see Topic 6 **ML Modelling Overview**
 - **nb_ML_Drift_Detection**
-  This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before.
-  Therefore we use Evidently
+  This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before. Therefore we use Evidently
+  
 ![Screenshot](images/Evidently.png)
 
-You can find these notebooks in the folder "notebooks" accordingly.
+**Note:** You can find these notebooks in the folder "notebooks" accordingly.
 
 **5. Email Notifications**
 There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or not.
