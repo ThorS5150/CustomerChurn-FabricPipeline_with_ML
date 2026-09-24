@@ -211,17 +211,15 @@ with a medallion architecture of:
 **4. Notebooks**
 We have several notebooks in the pipeline:
 - **nb_Wrangling**-Notebook is used for the first data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with GreatExpecatations (by Notebook nb_ValidationWithGreatEcpectations)
-![Screenshot](images/DDI%20Deployment%20Pipeline.png)
+![Screenshot](images/DDI.png)
 
 - In the next step we use the cleaned data to aggregate data to be ready for the gold layer (Analytics)
 - **nb_ValidationWithGreatExpectations**
   Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
 - **nb_SetupDataContext_with_GreatExpectations**
 - **ML_CustomerChurn-1821**
-  This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn
-
-![Screenshot](images/DDI_ML_Baseline.png)   
-
+  This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn.
+  For details please see Topic 6 **ML Modelling Overview**
 - **nb_Transform_SilverToGold**
   In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
 - **nb_ML_Drift_Detection**
@@ -265,18 +263,20 @@ tbd
 1. Load and Data Preparation/Transformation
 ![Screenshot](images/.png)
 
-2. Baseline for check of model drifting with Evidently
-3. ![Screenshot](images/DDI_ML_Baseline.png)
-4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+3. Baseline for check of model drifting with Evidently
+4. ![Screenshot](images/DDI_ML_Baseline.png)
+5. 
+6. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+![Screenshot](images/ModelRF.png)
+
+8. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+![Screenshot](images/ModelXGBoost.png)
+
+10. Compare Model 1 & 2
 ![Screenshot](images/.png)
-5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
-![Screenshot](images/.png)
-7. Compare Model 1 & 2
-![Screenshot](images/.png)
-9. Use of Fairlearn for Fairness
-![Screenshot](images/.png)
-11. Evidently Report for Drifitng
---> See "evidently_report.html" in folder reports
+
+12. Use of Fairlearn for Fairness
+![Screenshot](images/Fairlearn.png)
 
 
 
