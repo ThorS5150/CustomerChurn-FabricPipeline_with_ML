@@ -285,33 +285,10 @@ tbd
 
 ### 7. Summary & Analysing the results
 
+tbd
 
 
-
-## 🚀 Quick Start (5 Minutes)
-
-### Prerequisites
-- Microsoft Fabric workspace (free trial available)
-- Power BI Desktop
-- Python 3.8+ 
-- Great Expectations 1.22.0
-- Fairlearn 0.10.0
-- Evidently 0.4.25
-
-
-
-## 📚 Documentation
-
-- **[SETUP_GUIDE.md](./documentation/SETUP_GUIDE.md)** - Step-by-step implementation
-- **[ARCHITECTURE.md](./documentation/ARCHITECTURE.md)** - Architecture decisions
-- **[DATA_DICTIONARY.md](./documentation/DATA_DICTIONARY.md)** - Table & column reference
-- **[DAX_MEASURES.md](./documentation/DAX_MEASURES.md)** - 50+ measure formulas
-- **[QUICK_START.md](./QUICK_START.md)** - 5-minute quick start
-- **[GITHUB_PUSH_GUIDE.md](./GITHUB_PUSH_GUIDE.md)** - Push to GitHub
-
----
-
-## 🎓 7. Skills Demonstrated
+## 🎓 8. Skills Demonstrated
 
 ✅ **Modern Data Architecture**
 - Medallion pattern (Bronze/Silver/Gold)
@@ -352,6 +329,16 @@ tbd
 - Notebook orchestration
 
 
+## 🚀 Quick Start (5 Minutes)
+
+### Prerequisites
+- Microsoft Fabric workspace (free trial available)
+- Power BI Desktop
+- Python 3.8+ 
+- Great Expectations 1.22.0
+- Fairlearn 0.10.0
+- Evidently 0.4.25
+
 
 
 
@@ -362,6 +349,6 @@ MIT License - Feel free to fork and adapt.
 
 ---
 
-**Last Updated**: 2026-08-12  
+**Last Updated**: 2026-09-24
 **Architecture Strategy**: Gold-Only for Test/Prod (Simplified & Cost-Optimized)  
 **Status**: Production Ready
