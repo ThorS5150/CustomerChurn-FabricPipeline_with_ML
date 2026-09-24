@@ -263,19 +263,19 @@ tbd
 1. Load and Data Preparation/Transformation
 ![Screenshot](images/.png)
 
-3. Baseline for check of model drifting with Evidently
-4. ![Screenshot](images/DDI_ML_Baseline.png)
-5. 
-6. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+2. Baseline for check of model drifting with Evidently
+![Screenshot](images/DDI_ML_Baseline.png)
+   
+3. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
 ![Screenshot](images/ModelRF.png)
 
-8. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+4. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
 ![Screenshot](images/ModelXGBoost.png)
 
-10. Compare Model 1 & 2
+5. Compare Model 1 & 2
 ![Screenshot](images/.png)
 
-12. Use of Fairlearn for Fairness
+6. Use of Fairlearn for Fairness
 ![Screenshot](images/Fairlearn.png)
 
 
