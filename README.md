@@ -225,7 +225,8 @@ We have several notebooks in the pipeline:
 - **nb_ML_Drift_Detection**
   This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before.
   Therefore we use Evidently
-![Screenshot](images/Evidently.png)  
+  ![Screenshot](images/Evidently.png)
+   
 **5. Email Notifications**
 There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or not.
 
