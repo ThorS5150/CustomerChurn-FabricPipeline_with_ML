@@ -1,6 +1,6 @@
-# Power Platform, Fabric & PowerBI Analytics & Data Science Project
+# Enterprise-Grade Analytics Platform in Microsoft Fabric Project
 
-**Building an Enterprise-Grade Analytics Platform in Microsoft Fabric**
+**Building a Enterprice-Solution with Power Platform, Fabric/PowerBI & Data Science ML-Model **
 
 ## Table of Content
 
