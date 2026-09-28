@@ -268,10 +268,26 @@ We connect several notebooks in the pipeline:
 
 - The **nb_Wrangling**-Notebook is used for the first data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with GreatExpecatations (by Notebook
   nb_ValidationWithGreatEcpectations) before stored in the table of the silver layer
+
+![Screenshot](images/DataCleaning.png)
+
 - **nb_ValidationWithGreatExpectations**
   Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
+
+![Screenshot](images/Check_GreatExpectations_Lakehouse.png)
+
+Validation begins
+![Screenshot](images/Validate_with_GreatExpectations.png)
 - **nb_SetupDataContext_with_GreatExpectations**
   To setup the GreatExpectations suite to do the validation with new data coming into the pipeline we use this notebook, which is only executed if there is no checkpoint in place 
+
+![Screenshot](images/gx_Setup_LoadData.png)
+![Screenshot](images/gx_Configure.png)
+![Screenshot](images/gx_define_TableExp.png)
+![Screenshot](images/gx_define_ColExp.png)
+![Screenshot](images/gx_evaluate.png)
+
+
 - **nb_Transform_SilverToGold**
   In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
 - **ML_CustomerChurn-1821**
@@ -289,6 +305,7 @@ There is a email notification after each pipeline run to inform the responsible 
 
 **6. External Libraries**
 The following external libraries must be installed in an environment. This environment has to be used for all notebooks accordingly.
+
 ![Screenshot](images/DDI%20external%20libraries.png)
 
 
