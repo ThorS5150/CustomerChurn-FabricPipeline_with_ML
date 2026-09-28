@@ -89,6 +89,10 @@ The Microsoft Power Platform is a low-code suite (Power Apps, Power Automate, Po
 
 Microsoft Fabric is an end-to-end, SaaS-based analytics platform that unifies data engineering, data integration, data science, real-time analytics, and business intelligence on a single OneLake data foundation. Instead of stitching together separate tools for ETL, storage, and reporting, Fabric provides Lakehouses, Data Factory pipelines, notebooks, and Power BI in one governed workspace — which is why it's used here as the "one platform" backbone for the churn solution.
 
+#### Pipeline
+
+The Fabric Data Factory pipeline orchestrates the end-to-end flow: copying data from Dataverse, triggering the cleaning and validation notebooks, running the ML training/scoring notebooks, and refreshing the Gold layer tables and Power BI semantic model — all on a scheduled, automated basis.
+
 ### Data Cleaning
 
 We load the data from Dataverse to the bronze Lakehouse layer. Afterwards we start the data cleaning procedure by using a notebook (nb_DataWrangling) to:
@@ -97,7 +101,7 @@ We load the data from Dataverse to the bronze Lakehouse layer. Afterwards we sta
  - fill missing values for boolean types with 0
  - change decimal format to decimal(12,2)
  - Delete unnessaccery columns
- - We save the cleaned data file in the Files folder of the bronze Lakehouse Layer to be validated with Great Expectations before transferred into the silver layer
+ - We save the cleaned data file in the Files folder of the bronze Lakehouse Layer to be validated with **Great Expectations** before transferred into the silver layer
 
 #### Great Expectations
 
@@ -125,26 +129,23 @@ What would make the choice stronger:
 
 **LightGBM** is a common third option, but it's optional. Two models plus a baseline is enough for a portfolio project.
 
-### Pipeline
 
-The Fabric Data Factory pipeline orchestrates the end-to-end flow: copying data from Dataverse, triggering the cleaning and validation notebooks, running the ML training/scoring notebooks, and refreshing the Gold layer tables and Power BI semantic model — all on a scheduled, automated basis.
-
-### Hyperparameter Tuning
+#### Hyperparameter Tuning
 
 Hyperparameter tuning is the process of systematically searching for the model configuration (e.g., number of trees, tree depth, learning rate) that yields the best predictive performance, typically via grid search, random search, or Bayesian optimization combined with cross-validation.
 
-### Feature Selection
+#### Feature Selection
 
 Feature selection identifies which input variables actually contribute to predicting churn and removes redundant or irrelevant ones. This reduces overfitting, improves model interpretability, and speeds up training.
 
-### Metrics
+#### Metrics
 
 - **Accuracy** – share of overall correct predictions.
 - **Precision** – of all customers predicted to churn, how many actually did.
 - **F1 Score** – harmonic mean of precision and recall; useful when classes are imbalanced.
 - **ROC AUC** – measures how well the model separates churners from non-churners across all classification thresholds.
 
-#### MLflow
+##### MLflow
 
 [MLflow](https://mlflow.org/) is an open-source platform for managing the ML lifecycle: experiment tracking (parameters, metrics, artifacts), model versioning, and reproducibility. Here it logs every training run of the churn model and provides the audit trail referenced for ISO 42001 (Clause 7.5).
 
