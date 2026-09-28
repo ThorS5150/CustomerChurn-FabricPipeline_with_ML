@@ -287,19 +287,22 @@ Validation begins
 ![Screenshot](images/gx_define_TableExp.png)
 ![Screenshot](images/gx_define_ColExp.png)
 ![Screenshot](images/gx_evaluate.png)
+![Screenshot](images/gx_3_Suite.png)
+![Screenshot](images/gx_3_Suite_2.png)
 
 
 - **nb_Transform_SilverToGold**
   In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
 - **ML_CustomerChurn-1821**
   This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn.
-  For details please see Topic 6 **ML Modelling Overview**
+  For details please see **Topic 6 - ML Modelling Overview**
 - **nb_ML_Drift_Detection**
-  This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before. Therefore we use Evidently
+  This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before. 
+  Therefore we use Evidently
   
 ![Screenshot](images/Evidently.png)
 
-**Note:** You can find these notebooks in the folder "notebooks" accordingly.
+**Note:** You can find these notebooks in the **folder "notebooks"** accordingly.
 
 **5. Email Notifications**
 There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or not.
@@ -338,7 +341,7 @@ tbd
 
 1. Load and Data Preparation/Transformation
    
-![Screenshot](images/.png)
+![Screenshot](images/DDI_Model_DataPrep.png)
 
 3. Baseline for check of model drifting with Evidently
    
@@ -346,25 +349,165 @@ tbd
    
 4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
 
+### Random Forest Model
+
+This step trains a Random Forest classifier to predict customer churn. Preprocessing, feature selection and the model are combined in one scikit-learn `Pipeline`, so every step is fitted only on training data (no data leakage).
+
+**Pipeline steps**
+1. **Preprocessing:** one-hot encoding of categorical columns; numeric columns pass through unchanged.
+2. **Feature selection:** an XGBoost model ranks the features by importance, and `SelectFromModel` keeps only those above the median. This reduces noise and training time.
+3. **Classifier:** `RandomForestClassifier` with `class_weight="balanced"` to handle the imbalance between churners and non-churners.
+
+**Hyperparameter tuning**
+`RandomizedSearchCV` samples 30 random parameter combinations (number of trees, depth, split/leaf sizes, features per split) and evaluates each with 5-fold cross-validation. F1 is the optimization metric because churn data is usually imbalanced and accuracy alone would be misleading.
+
+**Evaluation and tracking**
+The best model is evaluated on the held-out test set (accuracy, precision, recall, F1, ROC-AUC). Metrics, best parameters and the full pipeline are logged to **MLflow** and registered in the model registry as `ML_CustomerChurn-1821-rf`, so the model is versioned and reproducible.
+
 ![Screenshot](images/ModelRF.png)
 
 5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
+
+### XGBoost Model
+
+This step trains an XGBoost classifier to predict customer churn. As with the Random Forest model, preprocessing, feature selection and the classifier are combined in one scikit-learn `Pipeline`, so all steps are fitted only on training data (no data leakage).
+
+**Pipeline steps**
+1. **Preprocessing:** one-hot encoding of categorical columns; numeric columns pass through unchanged.
+2. **Feature selection:** a preliminary XGBoost model ranks the features by importance, and `SelectFromModel` keeps only those above the median.
+3. **Classifier:** `XGBClassifier` (gradient-boosted decision trees). Class imbalance is handled with `scale_pos_weight`, calculated as the ratio of non-churners to churners in the training data.
+
+**Hyperparameter tuning**
+`RandomizedSearchCV` samples 30 random combinations (number of trees, tree depth, learning rate, row subsampling, column subsampling) and evaluates each with 5-fold cross-validation. F1 is the optimization metric because churn data is usually imbalanced.
+
+**Evaluation and tracking**
+The best model is evaluated on the held-out test set (accuracy, precision, recall, F1, ROC-AUC). Metrics, best parameters and the full pipeline are logged to **MLflow** (Fabric experiment) and registered in the model registry as `ML_CustomerChurn-1821-xgb`. This allows a direct comparison with the Random Forest model.
 
 ![Screenshot](images/ModelXGBoost.png)
 
 6. Compare Model 1 & 2
 
-![Screenshot](images/.png)
+### 💡 Core Metrics Explained (Churn Context)
+
+* **Precision (Alarm Accuracy):** *"When the model predicts a customer will churn, how often is it right?"*
+  * **Our Score (~50%):** Out of 100 flagged customers, 50 actually churn, while 50 are false alarms. High precision prevents wasting retention budget on happy customers.
+* **Recall (Detection Completeness):** *"Out of all customers who actually churned, how many did the model catch?"*
+  * **Our Score (~78%):** Out of 100 true churners, the model catches 78 and misses 22. High recall ensures you do not blindly lose customers to competitors.
+
+> **The Churn Rule of Thumb:** In churn prevention, **Recall is usually king**. It is far cheaper to offer a loyalty discount to a happy customer (False Positive) than to permanently lose a customer because the model missed them (False Negative).
+
+
+![Screenshot](images/ML_Compare.png)
 
 7. Use of Fairlearn for Fairness
 
+### Fairness Check (Fairlearn)
+
+This step checks whether the best model (XGBoost) treats groups defined by a sensitive attribute (here: gender) differently. Fairness is evaluated on the held-out test set with **Fairlearn**.
+
+**Metrics per group**
+`MetricFrame` calculates accuracy and selection rate (share of customers predicted to churn) separately for each group. Large gaps between groups are a warning sign.
+
+**Fairness metrics**
+- **Demographic Parity Difference:** largest difference in selection rate between groups. 0 means all groups are flagged as churners at the same rate.
+- **Equalized Odds Difference:** largest difference between groups in true positive rate or false positive rate, whichever is bigger. 0 means the model makes errors at equal rates across groups.
+
+Values close to 0 are better. Values above roughly 0.1 usually deserve a closer look, but the acceptable level depends on the use case.
+
+**Tracking**
+Both fairness metrics are logged to **MLflow** in a separate run (`xgboost_fairness`), so fairness results are documented next to the performance metrics of the model.
+
 ![Screenshot](images/Fairlearn.png)
 
+![Screenshot](images/Fairlearn_result.png)
 
 
 ### 7. Summary & Analysing the results
 
-tbd
+#### 1. Hyperparameter Optimization Strategy
+To find the optimal configuration for each algorithm, separate **`RandomizedSearchCV`** loops were executed with 5-fold cross-validation (`cv=5`) over 30 iterations. 
+
+```python
+# Optimization setup used for tuning
+search_rf = RandomizedSearchCV(
+    pipeline_rf, param_dist_rf, n_iter=30, cv=5,
+    scoring="f1", n_jobs=-1, random_state=42
+)
+
+search_xgb = RandomizedSearchCV(
+    pipeline_xgb, param_dist_xgb, n_iter=30, cv=5,
+    scoring="f1", n_jobs=-1, random_state=42
+)
+```
+
+**Strategic Choice:**
+* **F1-Score Optimization:** Both searches optimized for `scoring="f1"` (the harmonic mean of Precision and Recall). Because our dataset consists of static snapshots without time-series trends, maximizing the F1-score ensures the models natively learn to balance detection performance against the cost of false alarms.
+
+---
+
+#### 2. Evaluation Matrix & Results
+The tuned models yielded the following performance metrics on the test dataset:
+
+| Model | Accuracy | Precision | Recall | F1-Score | AUC |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **RandomForest** | 0.724 | 0.487 | **0.781** | 0.600 | **0.827** |
+| **XGBoost** | **0.736** | **0.501** | 0.770 | **0.607** | **0.827** |
+
+##### 💡 Core Metrics Quick Reference
+* **Precision (Alarm Accuracy):** *When the model flags a customer, how often is it right?* At ~50%, out of 100 flagged customers, 50 actually churn, while 50 are false alarms.
+* **Recall (Detection Completeness):** *Out of all customers who actually churn, how many did we catch?* At ~78%, out of 100 true churners, the model successfully alerts us to 78 and misses 22.
+
+---
+
+#### 3. Business Analysis & Model Selection
+While **XGBoost** achieved a marginally higher F1-Score (+0.007) and slightly sharper Precision, **RandomForest was selected as the final production model** based on the economic realities of the Telecommunications sector.
+
+##### The Telco Churn Asymmetry (Business Case Simulation)
+In telecom, customer acquisition costs (CAC) are notoriously high. Industry benchmarks show that **retaining an existing subscriber is roughly 5x cheaper than acquiring a new one**. 
+
+To illustrate why **RandomForest** is the financially superior choice despite lower precision, consider a sample cohort of **10,000 customers** with a **10% baseline churn rate (1,000 actual churners)**:
+
+* **Cost of False Negative (Missed Churner):** \$250 (Replacement / Acquisition Cost)
+* **Cost of False Positive (False Alarm Retention Offer):** \$50 (Retention Discount / Incentive)
+
+| Metric / Financial Impact | RandomForest | XGBoost | Business Impact |
+| :--- | :---: | :---: | :--- |
+| **True Positives (Caught Churners)** | **781** | 770 | RF saves **11 more contracts** |
+| **False Negatives (Missed Churners)** | **219** | 230 | RF avoids **11 lost customers** |
+| **False Positives (False Alarms)** | 823 | **767** | XGB saves 56 promo payouts |
+| **Total Churn Cost (Missed + Promo)** | **\$95,900** | **\$95,850** | **Statistical Tie** |
+
+##### Strategic Conclusion
+1. **Identical Discriminative Power:** Both models share an identical **AUC of 0.827**, proving they possess the exact same underlying predictive capacity.
+2. **Risk Mitigation:** RandomForest's higher Recall (**78.1% vs. 77.0%**) proactively protects subscriber volume. In a competitive telecom market, preserving market share and preventing subscriber migration to competitors heavily outweighs the minor campaign budget saved by XGBoost's precision.
+
+---
+
+#### 4. Next Steps for Optimization
+* **Decision Threshold Tuning:** Manually shift the classification threshold post-training to trade a bit of Precision for an artificial boost in Recall (targeting >85%).
+* **Feature Expansion:** Introduce engineered ratio features (e.g., total interactions normalized by total contract length) to better capture "silent churners" within static snapshot data.
+* **Cost-Centric Scoring:** Experiment with a custom scoring function in `RandomizedSearchCV` that applies explicit financial weights (\$250 vs \$50) to False Negatives and False Positives instead of a generic F1-score.
+
+
+#### 5. Fairness & Bias Assessment (Fairlearn)
+A fairness evaluation was conducted across the gender attribute (`cr8b0_gender`) using the `Fairlearn` framework to ensure equitable model behavior across demographic groups (Sample sizes: Group 0 = 502, Group 1 = 499).
+
+| Metric | Group 0 | Group 1 | Absolute Difference |
+| :--- | :---: | :---: | :---: |
+| **Accuracy** | 0.7371 | 0.7355 | **0.0016** |
+| **Selection Rate** | 0.4124 | 0.4008 | **0.0115** |
+| **True Positive Rate (Recall)** | 0.7820 | 0.7576 | **0.0244** |
+| **False Positive Rate** | 0.2791 | 0.2725 | **0.0067** |
+
+##### Fairness Analysis & Insights
+The model demonstrates an **exceptionally high level of fairness** and satisfies standard algorithmic equity criteria:
+
+* **Demographic Parity (Selection Rate):** The demographic parity difference is only **1.15%**. Both gender groups have an almost equal probability of being flagged for churn and receiving retention offers.
+* **Equal Opportunity (TPR / Recall):** The model successfully catches 78.2% of churners in Group 0 and 75.8% in Group 1. The minor variance of **2.44%** is well within acceptable industry thresholds (typically <5%), meaning the model does not systematically fail to protect one specific demographic group from churning.
+* **Predictive & Error Equality:** Both overall Accuracy (0.16% delta) and False Positive Rates (0.67% delta) are virtually identical, confirming that the model's error profile is stable and unbiased.
+
+No mitigation steps (e.g., Fairlearn's `ExponentiatedGradient` or `ThresholdOptimizer`) are required, as the unmitigated RandomForest model inherently maintains demographic and predictive fairness.
+
 
 
 ## 🎓 8. Skills Demonstrated
