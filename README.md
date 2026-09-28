@@ -56,49 +56,105 @@ The final pipeline/platform:
   This helps the management to get asap aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future.
 
 ### 1.4 Growth & Next Steps
-More Applications from Power platform or other data sources could be integrated to be loaded into the Lakehouse for data cleaning and preparation. 
-Furthermore ... 
 
+**Data & Integration**
+- Integrate additional Power Platform apps and other sources (CRM, billing, support tickets) into the Lakehouse for richer customer features
+- Move from daily batch to near-real-time ingestion with Fabric Eventstreams
 
+**Modelling**
+- Add a Logistic Regression baseline and LightGBM for broader model comparison
+- Handle class imbalance (class weights / SMOTE) and optimize the decision threshold based on retention cost vs. churn cost
+- Add SHAP explanations so management understands *why* individual customers are likely to churn
+- Extend to customer lifetime value (CLV) and survival analysis to prioritize high-value customers
+
+**Business Actions**
+- Write churn scores back to Dataverse so sales and marketing teams see them directly in their Power Apps
+- Use Power Automate to trigger retention campaigns automatically for high-risk customers
+- A/B test retention offers and measure their impact on churn rate
+
+**Platform & Governance**
+- Add a Fabric Data Warehouse as a serving layer on top of the Gold layer for T-SQL access, transactional write-back of churn scores, and centrally managed row-/column-level security as the number of BI users and data
+  domains grows
+- Add CI/CD automation (Git + Fabric deployment pipelines) and automated tests for notebooks
+- Add monitoring alerts for pipeline failures, data quality violations and drift
+- Expand fairness monitoring to additional customer segments
 
 ## 2. Concept Overview
 
-### Power Platform/Apps
-is
+### Power Platform / Apps
 
-### Fabric 
-is
+The Microsoft Power Platform is a low-code suite (Power Apps, Power Automate, Power BI, Dataverse) for building business applications and automating workflows. In this project, Power Apps is the front end used by employees to capture daily customer data, which is stored in Dataverse — a managed, structured data store with built-in security roles and business logic. Dataverse acts as the source system feeding the Fabric Lakehouse.
+
+### Fabric
+
+Microsoft Fabric is an end-to-end, SaaS-based analytics platform that unifies data engineering, data integration, data science, real-time analytics, and business intelligence on a single OneLake data foundation. Instead of stitching together separate tools for ETL, storage, and reporting, Fabric provides Lakehouses, Data Factory pipelines, notebooks, and Power BI in one governed workspace — which is why it's used here as the "one platform" backbone for the churn solution.
 
 ### Data Cleaning
-#### Great Expectations is ..
 
-### ML Modelling:
-We use two different ML models  
+We load the data from Dataverse to the bronze Lakehouse layer. Afterwards we start the data cleaning procedure by using a notebook (nb_DataWrangling) to:
+ - Delete Duplicates
+ - Define Columns where NAN values has to be deleted (only if NAN is under 5%)
+ - fill missing values for boolean types with 0
+ - change decimal format to decimal(12,2)
+ - Delete unnessaccery columns
+ - We save the cleaned data file in the Files folder of the bronze Lakehouse Layer to be validated with Great Expectations before transferred into the silver layer
+
+#### Great Expectations
+
+[Great Expectations](https://greatexpectations.io/) is an open-source Python framework for data validation and data quality testing. It lets you define "expectations" (rules such as "column must not contain nulls" or "value must be between 0 and 1") and automatically checks incoming data against them. In this project, it's used as a quality gate between the Bronze and Silver layers, and its checkpoints double as evidence for ISO 42001 data-quality/governance requirements (Annex A.4.3).
+
+### ML Modelling
+
+We use two different classification models to predict customer churn — **RandomForest** and **XGBoost** — and compare their performance to select the best-performing one (see Section 6).
+
+**Why they fit**
+- Churn data (Telco-style) is structured and tabular, where tree ensembles usually beat neural networks.
+- Both handle mixed feature types, non-linear effects and interactions without much preprocessing.
+- They're robust, give feature importances, and are widely accepted by recruiters and hiring managers as the sensible default.
+- RandomForest (bagging) and XGBoost (boosting) are different enough to make the comparison meaningful.
+
+**Caveat:** on a small dataset (5,000 rows, synthetic missing values), differences between RF and XGBoost will likely be small. Don't over-interpret them, and use cross-validation rather than a single split.
+
+What would make the choice stronger:
+
+ - Add a Logistic Regression baseline. It's the classic churn benchmark. If your tree models barely beat it, that's a finding worth reporting, and it's more interpretable, which matters for ISO 42001 / explainability.
+ - Handle class imbalance. Churn is typically around 25% positive. Use class_weight / scale_pos_weight or SMOTE, and judge the models on Recall, PR-AUC and F1, not accuracy.
+ - Tune the decision threshold. The default 0.5 is rarely optimal. Base it on the cost of a missed churner vs. a wasted retention offer.
+ - Add SHAP. It explains why individual customers are predicted to churn, which is what management actually needs and it fits your governance story.
+ - Check calibration, since predicted probabilities feed marketing decisions.
+
+**LightGBM** is a common third option, but it's optional. Two models plus a baseline is enough for a portfolio project.
 
 ### Pipeline
 
-### Hypertuning
+The Fabric Data Factory pipeline orchestrates the end-to-end flow: copying data from Dataverse, triggering the cleaning and validation notebooks, running the ML training/scoring notebooks, and refreshing the Gold layer tables and Power BI semantic model — all on a scheduled, automated basis.
+
+### Hyperparameter Tuning
+
+Hyperparameter tuning is the process of systematically searching for the model configuration (e.g., number of trees, tree depth, learning rate) that yields the best predictive performance, typically via grid search, random search, or Bayesian optimization combined with cross-validation.
 
 ### Feature Selection
 
+Feature selection identifies which input variables actually contribute to predicting churn and removes redundant or irrelevant ones. This reduces overfitting, improves model interpretability, and speeds up training.
+
 ### Metrics
 
-   - ##### Accuraccy
-   - ##### Precission
-   - ##### f1 score
-   - ##### roc_auc
+- **Accuracy** – share of overall correct predictions.
+- **Precision** – of all customers predicted to churn, how many actually did.
+- **F1 Score** – harmonic mean of precision and recall; useful when classes are imbalanced.
+- **ROC AUC** – measures how well the model separates churners from non-churners across all classification thresholds.
 
-#### MLFlow 
-MLFlow is ...
+#### MLflow
 
-#### Fairlearn 
-Fairlearn is ..
+[MLflow](https://mlflow.org/) is an open-source platform for managing the ML lifecycle: experiment tracking (parameters, metrics, artifacts), model versioning, and reproducibility. Here it logs every training run of the churn model and provides the audit trail referenced for ISO 42001 (Clause 7.5).
+
+#### Fairlearn
+
+[Fairlearn](https://fairlearn.org/) is an open-source Python toolkit for assessing and mitigating unfairness in ML models — e.g., checking whether churn predictions are systematically less accurate or biased for certain customer subgroups. It's used to satisfy the fairness requirement under ISO 42001 (Annex A.5).
 
 #### Evidently AI
-Evidently is ...
 
-
-
+[Evidently AI](https://www.evidentlyai.com/) is an open-source library for monitoring ML models in production, particularly for detecting **data drift** and **model/target drift** — i.e., when the statistical properties of incoming data diverge from the data the model was trained on. In this project, it triggers automatic retraining when drift is detected and supports the model-validation requirement under ISO 42001 (Annex A.7).
 
 ##  3. Data Overview & Preparation
 
@@ -112,8 +168,9 @@ The data set includes information about:
   - Phone Services
   - ....
 
+=> You can find the dataset in csv format under data/raw/customerchurn_withmissing_data.csv
 
-The data is collected on a daily base by the employees how are dealing with the customer on a day by day base.
+The data is collected within the Power Apps Platform on a daily base by the employees how are dealing with the customer on a day by day base.
 There are currently 5,000+ customers in the relevant dataset used to analyse the churn behaviour of the clients.
 
 ### Fabric Notebook
