@@ -4,8 +4,6 @@
 
 An end-to-end, automated churn solution: employees capture customer data in a Power App, a daily Fabric pipeline validates it, checks the model for drift, retrains when needed and refreshes the Power BI reports. Built on the public IBM Telco dataset, so this is a **portfolio project on demo data**, not a production system.
 
-**Demo:** **[TODO: add link to short demo video / GIF and PDF export of the Power BI report]**
-
 ## Architecture at a Glance
 
 ![Architecture](images/architecture.png)
@@ -123,7 +121,6 @@ Runs daily at 6 AM so fresh data is available at the start of the working day.
 
 ![Drift detection](images/Evidently.png)
 
-**[TODO: describe how drift was simulated on the static dataset and add a screenshot showing `drift_detected = True` followed by retraining]**
 
 <details>
 <summary>Great Expectations setup and validation screenshots</summary>
@@ -272,9 +269,7 @@ Cost does not separate the two models (difference < 0.1 %). XGBoost would be an 
 
 ### Fairness check (Fairlearn, gender)
 
-**[TODO: confirm which model was evaluated. The original section 6.6 stated XGBoost, the results section stated RandomForest. Adjust the wording below to match the notebook.]**
-
-Evaluated on the held-out test set with `MetricFrame` (group sizes: 502 and 499). Both fairness metrics are logged to MLflow in a separate run.
+The Random Forest model was selected and evaluated on the held-out test set with `MetricFrame` (group sizes: 502 and 499). Both fairness metrics are logged to MLflow in a separate run.
 
 | Metric | Group 0 | Group 1 | Difference |
 | :--- | :---: | :---: | :---: |
@@ -287,7 +282,7 @@ Evaluated on the held-out test set with `MetricFrame` (group sizes: 502 and 499)
 - **Equalized odds difference:** 0.0244 (the larger of the TPR and FPR gaps)
 - Both are well below the ~0.1 level at which a closer look is usually recommended
 
-**Caveats:** only one attribute was assessed. With about 500 customers per group (roughly 130 churners each at 27 % churn), gaps of this size cannot be statistically distinguished from zero. No mitigation was applied. **[TODO: add bootstrap 95 % confidence intervals for the gaps, or remove this reference.]**
+**Caveats:** only one attribute was assessed. With about 500 customers per group (roughly 130 churners each at 27 % churn), gaps of this size cannot be statistically distinguished from zero. No mitigation was applied.
 
 ![Fairlearn](images/Fairlearn.png)
 
@@ -308,7 +303,6 @@ ISO 42001 is a management-system standard for organisations. The tools below pro
 
 Operational controls in the platform: separate Dev/Test/Prod workspaces, workspace roles, retries and email notification per pipeline run.
 
-**[TODO: add the Row-Level Security role definition with a screenshot, or leave RLS out. The original section was unfinished.]**
 
 ---
 
