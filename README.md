@@ -6,7 +6,7 @@ An end-to-end, automated churn solution: employees capture customer data in a Po
 
 **Demo:**
 
-![Demo](images/churn_demo_en.png)
+![Demo](images/churn_demo_en.gif)
 
 ## Architecture at a Glance
 
