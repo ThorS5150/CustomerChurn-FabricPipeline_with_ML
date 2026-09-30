@@ -1,576 +1,368 @@
-# Enterprise-Grade Analytics Platform in Microsoft Fabric Project
+# Customer Churn Platform on Microsoft Fabric
 
-**Building a Enterprise-Solution with Power Platform, Fabric/PowerBI & Data Science ML-Model **
+**Power Apps / Dataverse → Fabric Lakehouse → ML with drift-triggered retraining → Power BI, with data-quality, fairness and traceability checks mapped to ISO 42001.**
 
-## Table of Content
+An end-to-end, automated churn solution: employees capture customer data in a Power App, a daily Fabric pipeline validates it, checks the model for drift, retrains when needed and refreshes the Power BI reports. Built on the public IBM Telco dataset, so this is a **portfolio project on demo data**, not a production system.
 
-1. Project Overview
- - 1.1 Context
- - 1.2 Actions
- - 1.3 Results
- - 1.4 Growth/Next Steps
-2. Concept Overview 
-3. Data Overview & Preparation
-4. Building the pipelines/platform (Application & Code)
- - 4.1 Creating the Worspaces and Deployment Pipeline
- - 4.2 Creating the Fabric items
- - 4.3 Running the Data pipeline
- - 4.4 Buidling Reports in Power BI
-5. Ensure Data Governance - ISO 42001  
-6. ML Modelling Overview
-7. Summary & Analysing the results
-8. Skills demonstrated
+**Demo:** **[TODO: add link to short demo video / GIF and PDF export of the Power BI report]**
 
+## Architecture at a Glance
 
-##  1. Project Overview
-In this project, we demonstrate how to create a platform that can handle customer churn by using Fabric with Power Platforms and Power BI. 
-We use this to show the main concepts of Data Analysis & Data-Science with ML, do reporting with Power BI and respecting Data and AI Governance based on ISO 42001.
+![Architecture](images/architecture.png)
 
-### 1.1 Context
-Customer churn is the single largest revenue leak for companies. Acquiring a new customer costs up to 20× more than retaining an existing one. So this is a common business problem and why it is important to understand  customers behaviour.
+## Key Results
 
-### 1.2 Actions
-We create a "One Platform Solution" with Fabric that integrates the daily operational work within a Power Platform applications to gain insights out of this data using a ML Model and a automated Reporting Pipeline for the Management to get all important insights as soon as possible by additionally respecting data quality and data governance regulations and rules (ISO 42001).
-Based on this insides we can launch marketing campaigns with new offers to target current clients who are very likely to end the contract.  
+| Area | Result |
+| :--- | :--- |
+| Business insight | Overall churn 27 %. Month-to-month customers churn earliest. 2-year contracts churn < 5 %, 1-year contracts ~15 % |
+| Retention scenario | ~103K yearly saved revenue in the example (30 % switch to 2-year contract, efficiency 0.35). This is a hypothesis, not a forecast |
+| Model (RandomForest, selected) | AUC 0.827, recall 78 %, precision ≈ 49 % on the held-out test set (1,001 customers) |
+| Fairness (gender) | Selection-rate gap 1.2 pp, true-positive-rate gap 2.4 pp. Groups are small (~500 each), so no significance claim |
+| Automation | Daily 6 AM pipeline: ingest → clean → validate → drift check → conditional retraining → refresh reports |
+| Governance | Great Expectations, MLflow, Fairlearn and Evidently, mapped to ISO 42001 controls |
 
-The Platform/Fabric Solution does the follwing:
-  - Loads Data from the Dataverse (Power Platform) into a Bronze Lakehouse
-  - Clean data using data wrangling in a notebook (nb_DataWrangling)
-  - Validate Data in the bronze layer with Great Expectations before loading data into the silver layer
-  - Loading cleaned data from the silver layer to train, test and evaluate ML Model for churn predictions
-  - Checks if the model is drifting or discriminating (ISO 42001)
-  - If model is drifitng, we train the model automatically new 
-  - Load aggregated data into gold layer for reporting reasons
-  ....
+## Contents
 
-### 1.3 Results
-The final pipeline/platform:
-   - automaticly loads an transforms data from daily data out of Dataverse (Power Apps) into a Fabric Lakehouse  
-   - automaticlly cleans and validates data from Dataverse in regards to ISO 42001 
-   - If the customer data changes so significantly tomorrow that the mathematical pattern no longer matches the model, Evidently raises an alarm (drift_detected = True). The pipeline initiates training, the model learns
-     the new patterns, and the original_training_data is updated so that the drift check has an up-to-date baseline for comparison from the day after tomorrow onwards
-   - updates the ML model (training and testing with new data) if drift is detected and checks for ISO 42001 conformity
-   - daily updates all semantic models/reports
-   - 
+1. [Overview](#1-overview)
+2. [Data](#2-data)
+3. [Platform and Pipeline](#3-platform-and-pipeline)
+4. [Power BI Report](#4-power-bi-report)
+5. [ML Model](#5-ml-model)
+6. [Governance and ISO 42001 Mapping](#6-governance-and-iso-42001-mapping)
+7. [Limitations and Next Steps](#7-limitations-and-next-steps)
+8. [How to Reproduce](#8-how-to-reproduce)
+9. [Skills Demonstrated](#9-skills-demonstrated)
 
-  This helps the management to get asap aware of any changes in customer churn and helps them to understand what are the reasons customer leave and develop strategies to avoid loosing customers in the future.
+---
 
-### 1.4 Growth & Next Steps
+## 1. Overview
 
-**Data & Integration**
-- Integrate additional Power Platform apps and other sources (CRM, billing, support tickets) into the Lakehouse for richer customer features
-- Move from daily batch to near-real-time ingestion with Fabric Eventstreams
+**Problem.** Acquiring a new customer typically costs several times more than retaining one (the ratio is industry-dependent). Understanding *who* leaves, *when* and *why* is therefore a core business question.
 
-**Modelling**
-- Add a Logistic Regression baseline and LightGBM for broader model comparison
-- Handle class imbalance (class weights / SMOTE) and optimize the decision threshold based on retention cost vs. churn cost
-- Add SHAP explanations so management understands *why* individual customers are likely to churn
-- Extend to customer lifetime value (CLV) and survival analysis to prioritize high-value customers
+**Solution.** One platform on Microsoft Fabric:
 
-**Business Actions**
-- Write churn scores back to Dataverse so sales and marketing teams see them directly in their Power Apps
-- Use Power Automate to trigger retention campaigns automatically for high-risk customers
-- A/B test retention offers and measure their impact on churn rate
+- Loads daily data from Dataverse (Power Apps) into a Bronze Lakehouse
+- Cleans the data in a notebook (`nb_DataWrangling`)
+- Validates it with Great Expectations before it enters the Silver layer
+- Trains and evaluates churn models on the Silver data
+- Checks for data drift with Evidently. If drift is detected, the model is retrained automatically and the drift baseline is updated for the next day's comparison
+- Writes aggregated data to the Gold layer and refreshes the Power BI semantic model and reports
 
-**Platform & Governance**
-- Add a Fabric Data Warehouse as a serving layer on top of the Gold layer for T-SQL access, transactional write-back of churn scores, and centrally managed row-/column-level security as the number of BI users and data
-  domains grows
-- Add CI/CD automation (Git + Fabric deployment pipelines) and automated tests for notebooks
-- Add monitoring alerts for pipeline failures, data quality violations and drift
-- Expand fairness monitoring to additional customer segments
+**Outcome for management.** Changes in churn become visible the next morning, together with the contract types and tenure phases most at risk. The report translates findings into a what-if revenue scenario for a retention campaign.
 
-## 2. Concept Overview
+---
 
-### Power Platform / Apps
+## 2. Data
 
-The Microsoft Power Platform is a low-code suite (Power Apps, Power Automate, Power BI, Dataverse) for building business applications and automating workflows. In this project, Power Apps is the front end used by employees to capture daily customer data, which is stored in Dataverse — a managed, structured data store with built-in security roles and business logic. Dataverse acts as the source system feeding the Fabric Lakehouse.
+- **Source:** public [IBM Telco Customer Churn dataset](https://github.com/IBM/telco-customer-churn-on-icp4d/blob/master/data/Telco-Customer-Churn.csv), loaded into a Dataverse table `customerchurn` to simulate daily operational data from a Power App. Roughly 5,000 customers are used. Target: `Churn` (boolean, 27 % positive).
+- **Features (excerpt):** customer id, gender, senior citizen, tenure, phone/internet/streaming services, contract type, payment method, monthly and total charges.
+- **Missing values:** the original data is complete, so 600 cells were deleted at random to make cleaning realistic. Raw file: `data/raw/customerchurn_withmissing_data.csv`.
 
-### Fabric
+**Cleaning (`nb_DataWrangling`):**
 
-Microsoft Fabric is an end-to-end, SaaS-based analytics platform that unifies data engineering, data integration, data science, real-time analytics, and business intelligence on a single OneLake data foundation. Instead of stitching together separate tools for ETL, storage, and reporting, Fabric provides Lakehouses, Data Factory pipelines, notebooks, and Power BI in one governed workspace — which is why it's used here as the "one platform" backbone for the churn solution.
+- Remove duplicates
+- Drop rows with missing values in selected columns, only where the missing share is below 5 %
+- Fill missing boolean values with 0 (assumes "missing = No")
+- Cast decimals to `decimal(12,2)`
+- Drop unnecessary columns
+- Save cleaned data as Parquet in the Bronze `Files` folder for validation
 
-#### Pipeline
+---
 
-The Fabric Data Factory pipeline orchestrates the end-to-end flow: copying data from Dataverse, triggering the cleaning and validation notebooks, running the ML training/scoring notebooks, and refreshing the Gold layer tables and Power BI semantic model — all on a scheduled, automated basis.
+## 3. Platform and Pipeline
 
-### Data Cleaning
-
-We load the data from Dataverse to the bronze Lakehouse layer. Afterwards we start the data cleaning procedure by using a notebook (nb_DataWrangling) to:
- - Delete Duplicates
- - Define Columns where NAN values has to be deleted (only if NAN is under 5%)
- - fill missing values for boolean types with 0
- - change decimal format to decimal(12,2)
- - Delete unnessaccery columns
- - We save the cleaned data file in the Files folder of the bronze Lakehouse Layer to be validated with **Great Expectations** before transferred into the silver layer
-
-#### Great Expectations
-
-[Great Expectations](https://greatexpectations.io/) is an open-source Python framework for data validation and data quality testing. It lets you define "expectations" (rules such as "column must not contain nulls" or "value must be between 0 and 1") and automatically checks incoming data against them. In this project, it's used as a quality gate between the Bronze and Silver layers, and its checkpoints double as evidence for ISO 42001 data-quality/governance requirements (Annex A.4.3).
-
-### ML Modelling
-
-We use two different classification models to predict customer churn — **RandomForest** and **XGBoost** — and compare their performance to select the best-performing one (see Section 6).
-
-**Why they fit**
-- Churn data (Telco-style) is structured and tabular, where tree ensembles usually beat neural networks.
-- Both handle mixed feature types, non-linear effects and interactions without much preprocessing.
-- They're robust, give feature importances, and are widely accepted by recruiters and hiring managers as the sensible default.
-- RandomForest (bagging) and XGBoost (boosting) are different enough to make the comparison meaningful.
-
-**Caveat:** on a small dataset (5,000 rows, synthetic missing values), differences between RF and XGBoost will likely be small. Don't over-interpret them, and use cross-validation rather than a single split.
-
-What would make the choice stronger:
-
- - Add a Logistic Regression baseline. It's the classic churn benchmark. If your tree models barely beat it, that's a finding worth reporting, and it's more interpretable, which matters for ISO 42001 / explainability.
- - Handle class imbalance. Churn is typically around 25% positive. Use class_weight / scale_pos_weight or SMOTE, and judge the models on Recall, PR-AUC and F1, not accuracy.
- - Tune the decision threshold. The default 0.5 is rarely optimal. Base it on the cost of a missed churner vs. a wasted retention offer.
- - Add SHAP. It explains why individual customers are predicted to churn, which is what management actually needs and it fits your governance story.
- - Check calibration, since predicted probabilities feed marketing decisions.
-
-**LightGBM** is a common third option, but it's optional. Two models plus a baseline is enough for a portfolio project.
-
-
-#### Hyperparameter Tuning
-
-Hyperparameter tuning is the process of systematically searching for the model configuration (e.g., number of trees, tree depth, learning rate) that yields the best predictive performance, typically via grid search, random search, or Bayesian optimization combined with cross-validation.
-
-#### Feature Selection
-
-Feature selection identifies which input variables actually contribute to predicting churn and removes redundant or irrelevant ones. This reduces overfitting, improves model interpretability, and speeds up training.
-
-#### Metrics
-
-- **Accuracy** – share of overall correct predictions.
-- **Precision** – of all customers predicted to churn, how many actually did.
-- **F1 Score** – harmonic mean of precision and recall; useful when classes are imbalanced.
-- **ROC AUC** – measures how well the model separates churners from non-churners across all classification thresholds.
-
-##### MLflow
-
-[MLflow](https://mlflow.org/) is an open-source platform for managing the ML lifecycle: experiment tracking (parameters, metrics, artifacts), model versioning, and reproducibility. Here it logs every training run of the churn model and provides the audit trail referenced for ISO 42001 (Clause 7.5).
-
-#### Fairlearn
-
-[Fairlearn](https://fairlearn.org/) is an open-source Python toolkit for assessing and mitigating unfairness in ML models — e.g., checking whether churn predictions are systematically less accurate or biased for certain customer subgroups. It's used to satisfy the fairness requirement under ISO 42001 (Annex A.5).
-
-#### Evidently AI
-
-[Evidently AI](https://www.evidentlyai.com/) is an open-source library for monitoring ML models in production, particularly for detecting **data drift** and **model/target drift** — i.e., when the statistical properties of incoming data diverge from the data the model was trained on. In this project, it triggers automatic retraining when drift is detected and supports the model-validation requirement under ISO 42001 (Annex A.7).
-
-##  3. Data Overview & Preparation
-
-### The dataset 
-In the daily business database, which is part of a bigger Power App Application, we have a table named "customerchurn" (to showcase the concept we used the Kaggle customer churn dataset wich can be found at https://www.kaggle.com/code/vanshkumar007/telco-churn-decoded-from-data-to-retention-strat ) that contains information about the customers churn over the last years. The column (Boolean type) within the dataset is called Churn. Since the dataset was a complete dataset we produced some missing data to be handled afterwards.
-The data set includes information about:
-  - customerid
-  - gender
-  - Senior Citizen
-  - tenure
-  - Phone Services
-  - ....
-
-=> You can find the dataset in csv format under data/raw/customerchurn_withmissing_data.csv
-
-The data is collected within the Power Apps Platform on a daily base by the employees how are dealing with the customer on a day by day base.
-There are currently 5,000+ customers in the relevant dataset used to analyse the churn behaviour of the clients.
-
-### Fabric Notebook
-We use the following Fabric notebooks inside the pipeline to load the data from the bronze Lakehouse and do the data cleaning & validation.
- - nb_DataWrangling
- - nb_SetupDataContext_with_GreatExpectations
- - nb_ValidationWithGreatExpectations
- 
-Details will be explained in **Topic 4.2**. 
-
-### Power BI Reports
-We build 10+ Dax Measures to mainly aggreagte ... 
-For reporting and analytics a star schema is used with the customer churn as Fact table and 5+ Dim tables (used within the daily business Power Apps application)
-
-## 4. Building the Pipelines (Application & Code)
-Here a short overview of which Technology we use for which layer and what the purpose of this t.
-
-### 🛠️ Technology Stack
+### Technology stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Data Source** | Dataverse | Store data  |
-| **Connection** | Dataverse  | Secure connectivity |
-| **Orchestration** | Fabric Data Factory | Pipeline scheduling |
-| **Transformation** | Python Notebooks | ETL at scale |
-| **ML Modelling** | Notebook & ML Model | ML Model | 
-| **Storage** | Fabric Lakehouse (Delta Lake) | Bronze/Silver/Gold |
-| **Analytics DB** | Fabric Data Warehouse | Structured analytics |
-| **Semantic Layer** | Fabric Semantic Model | Star schema + DAX |
-| **Reporting** | Power BI Desktop/Service | Dashboards & reports |
-| **Governance** | Notebook & Fabric Admin Portal | ISO42001 & Security & lineage |
-
-
-### 4.1 Creating the Workspaces and Deployment Pipeline
-
-![Screenshot](images/DDI%20Deployment%20Pipeline.png)
-
-1. DEVELOPMENT Workspace
-   → Develop Data Factory Pipeline
-   → Bronze (raw) → Silver (clean) → Gold (analytics)
-   → Transformation Code versioned in Git
-   → Semantic Model + Power BI (Dev versions)
-   → All debugging & experimentation
-
-2. TESTING Workspace
-   → Deploy Data Factory Pipeline
-   → Validate Semantic Model relationships
-   → Test RLS rules & security
-   → Performance testing
-   → Approve for Production
-
-3. PRODUCTION Workspace
-   → Deploy Data Factory Pipeline
-   → Deploy optimized Semantic Model
-   → Deploy Power BI Reports/Dashboaords and publish in Power BI Service
-   → Activate aggregations
-   → Schedule daily refresh (6 AM)
-
-4. TROUBLESHOOTING
-   If Production breaks:
-   ① Debug in Development 
-   ② Fix transformation logic
-   ③ Redeploy to Test and Production
-
-### 4.2 Creating the Fabric items
-
-**1. Pipeline**
-Use of the Pipeline item to orchestrate the DataFlow
-
-**2. Copy job**
-In the settings of the pipeline we set Retry to 3 with a retry interval of 60 sec. We do this for all items to avoid a failure of the pipeline due to e.g. a temporary connection problem. 
-
-**3. Lakehouse**
-We build a Lakehouse with a medallion architecture of:
-
-*Bronze Layer* (Raw Data)
-- Direct copies from Dataverse
-- 100% data lineage preserved
-- No transformations
-- Used for debugging & auditing
-
-*Silver Layer* (Cleaned Data)
-- Deduplication & null handling
-- Business rules applied
-- Data quality/ISO 42001 validation gates with Great Expectations
-- Conformed dimensions for consistency
-
-*Gold Layer* (Analytics Ready)
-- Star schema fact & dimension tables
-- Pre-aggregated metrics
-- Optimized for Semantic Model
-
-**4. Notebooks**
-We connect several notebooks in the pipeline:
-
-- The **nb_Wrangling**-Notebook is used for the first data cleaning. The cleaned data is first stored in the bronze Files Folder (Parquet format) and than used to be validated with GreatExpecatations (by Notebook
-  nb_ValidationWithGreatEcpectations) before stored in the table of the silver layer
-
-![Screenshot](images/DataCleaning.png)
+|---|---|---|
+| Source | Power Apps, Dataverse | Daily data capture, managed data store |
+| Orchestration | Fabric Data Factory | Scheduling, retries (3 × 60 s), email notification after each run |
+| Storage | Fabric Lakehouse (Delta) | Bronze / Silver / Gold |
+| Transformation | Python notebooks | Cleaning, validation, aggregation |
+| Data quality | Great Expectations | Quality gate between Bronze and Silver |
+| ML | scikit-learn, XGBoost, MLflow | Training, tuning, tracking, model registry |
+| Monitoring | Evidently, Fairlearn | Drift detection, fairness check |
+| Reporting | Power BI semantic model (star schema, DAX) | Dashboards and what-if scenario |
 
-- **nb_ValidationWithGreatExpectations**
-  Within the Validation Notebook there is a check if the Great Expectations Setup is already installed on the Lakehouse Files Folder. If not the Setup is executed, otherwise the validation beginns.
+### Medallion layers
 
-![Screenshot](images/Check_GreatExpectations_Lakehouse.png)
+- **Bronze:** raw copy from Dataverse, no transformations (debugging and audit)
+- **Silver:** deduplicated, null-handled, validated with Great Expectations
+- **Gold:** aggregated, reporting-ready tables for the semantic model
 
-Validation begins
-![Screenshot](images/Validate_with_GreatExpectations.png)
-- **nb_SetupDataContext_with_GreatExpectations**
-  To setup the GreatExpectations suite to do the validation with new data coming into the pipeline we use this notebook, which is only executed if there is no checkpoint in place 
+### Workspaces and deployment
 
-![Screenshot](images/gx_Setup_LoadData.png)
-![Screenshot](images/gx_Configure.png)
-![Screenshot](images/gx_define_TableExp.png)
-![Screenshot](images/gx_define_ColExp.png)
-![Screenshot](images/gx_evaluate.png)
-![Screenshot](images/gx_3_Suite.png)
-![Screenshot](images/gx_3_Suite_2.png)
+![Deployment pipeline](images/DDI%20Deployment%20Pipeline.png)
 
+| Stage | Purpose |
+|---|---|
+| Development | Build pipeline, notebooks, semantic model and reports. Code versioned in Git. All debugging happens here |
+| Test | Deploy via deployment pipeline, validate semantic model relationships and report behaviour, approve for production |
+| Production | Deploy pipeline, semantic model and reports, publish in Power BI Service, daily refresh at 6 AM |
 
-- **nb_Transform_SilverToGold**
-  In this step we use the cleaned data from the silver layer to aggregate data to be transferred to the gold layer. We do this for analytics reaseons
-- **ML_CustomerChurn-1821**
-  This notebook is used to create our ML-Model which we then can use inside the pipeline or within other applications to make predictions on clients churn.
-  For details please see **Topic 6 - ML Modelling Overview**
-- **nb_ML_Drift_Detection**
-  This notebook is part of the pipeline to check if we have any drifting in the ML Model we trained before. 
-  Therefore we use Evidently
-  
-![Screenshot](images/Evidently.png)
+If production breaks: debug and fix in Development, then redeploy to Test and Production. Test and Production deploy the Gold layer only (simplified and cost-optimised).
 
-**Note:** You can find these notebooks in the **folder "notebooks"** accordingly.
+### Pipeline
 
-**5. Email Notifications**
-There is a email notification after each pipeline run to inform the responsible admin if the pipeline run successfully or not.
+![Pipeline](images/DDI%20Pipeline.png)
 
-**6. External Libraries**
-The following external libraries must be installed in an environment. This environment has to be used for all notebooks accordingly.
+Runs daily at 6 AM so fresh data is available at the start of the working day.
 
-![Screenshot](images/DDI%20external%20libraries.png)
+### Notebooks (folder `notebooks/`)
 
+| Notebook | Purpose |
+|---|---|
+| `nb_DataWrangling` | First cleaning step, output to Bronze `Files` |
+| `nb_SetupDataContext_with_GreatExpectations` | Creates the expectation suite and checkpoint. Runs only if no checkpoint exists |
+| `nb_ValidationWithGreatExpectations` | Validates cleaned data, then loads it into Silver |
+| `nb_Transform_SilverToGold` | Aggregates Silver data into Gold |
+| `ML_CustomerChurn-1821` | Trains, tunes, evaluates and registers the models (see [5](#5-ml-model)) |
+| `nb_ML_Drift_Detection` | Drift check with Evidently. Triggers retraining if drift is detected |
 
-### 4.3 Running the Data pipeline
-We run the pipeline on a daily refresh at 6am to guaranty having fresh data for the start of the work day
-![Screenshot](images/DDI%20Pipeline.png)
-   
-### 4.4 Buidling Reports in Power BI
+![Data cleaning](images/DataCleaning.png)
 
-tbd
+![Drift detection](images/Evidently.png)
 
-### 5. Ensure Security, Data Governance - ISO 42001
+**[TODO: describe how drift was simulated on the static dataset and add a screenshot showing `drift_detected = True` followed by retraining]**
 
-- **Row-Level Security (RLS)**: Filter by 
-- **Object-Level Security (OLS)**: Hide sensitive measures
-- **Impact Analysis**: Understand measure dependencies
-- **Audit Logging**: Track data access & changes
-- **Workspace Roles**: Admin, contributor, viewer permissions
-- **Enterprise Security**: Row-Level Security (RLS), Object-Level Security (OLS)
-- **ISO 42001 - AIMS Compliance**: Check for ISO 42001 Compliance by using
-     - Great expecations (DataQuality/-Governance - Annex A.4.3), 
-     - MLFlow (Audit Trails - Clause 7.5), 
-     - Fairlearn (Fairness - Annex A.5) and   
-     - Evidently AI (Model Validation/- Drift - Annex A.7) 
+<details>
+<summary>Great Expectations setup and validation screenshots</summary>
 
-### 6. ML Modelling Overview
+![Check setup](images/Check_GreatExpectations_Lakehouse.png)
+![Validation](images/Validate_with_GreatExpectations.png)
+![Load data](images/gx_Setup_LoadData.png)
+![Configure](images/gx_Configure.png)
+![Table expectations](images/gx_define_TableExp.png)
+![Column expectations](images/gx_define_ColExp.png)
+![Evaluate](images/gx_evaluate.png)
+![Suite 1](images/gx_3_Suite.png)
+![Suite 2](images/gx_3_Suite_2.png)
 
---> You can find the Notbook under notebooks/ML_CustomerChurn-1821.ipynb
+</details>
 
-1. Load and Data Preparation/Transformation
-   
-![Screenshot](images/DDI_Model_DataPrep.png)
+<details>
+<summary>Required external libraries</summary>
 
-3. Baseline for check of model drifting with Evidently
-   
-![Screenshot](images/DDI_ML_Baseline.png)
-   
-4. MODELL 1: RandomForest with Hyperparameter-Tuning & Feature Selection
+![External libraries](images/DDI%20external%20libraries.png)
 
-### Random Forest Model
+Install them in one Fabric environment and use it for all notebooks.
 
-This step trains a Random Forest classifier to predict customer churn. Preprocessing, feature selection and the model are combined in one scikit-learn `Pipeline`, so every step is fitted only on training data (no data leakage).
-
-**Pipeline steps**
-1. **Preprocessing:** one-hot encoding of categorical columns; numeric columns pass through unchanged.
-2. **Feature selection:** an XGBoost model ranks the features by importance, and `SelectFromModel` keeps only those above the median. This reduces noise and training time.
-3. **Classifier:** `RandomForestClassifier` with `class_weight="balanced"` to handle the imbalance between churners and non-churners.
-
-**Hyperparameter tuning**
-`RandomizedSearchCV` samples 30 random parameter combinations (number of trees, depth, split/leaf sizes, features per split) and evaluates each with 5-fold cross-validation. F1 is the optimization metric because churn data is usually imbalanced and accuracy alone would be misleading.
-
-**Evaluation and tracking**
-The best model is evaluated on the held-out test set (accuracy, precision, recall, F1, ROC-AUC). Metrics, best parameters and the full pipeline are logged to **MLflow** and registered in the model registry as `ML_CustomerChurn-1821-rf`, so the model is versioned and reproducible.
-
-![Screenshot](images/ModelRF.png)
-
-5. MODELL 2: XGBoost with Hyperparameter-Tuning & Feature Selection
-
-### XGBoost Model
-
-This step trains an XGBoost classifier to predict customer churn. As with the Random Forest model, preprocessing, feature selection and the classifier are combined in one scikit-learn `Pipeline`, so all steps are fitted only on training data (no data leakage).
-
-**Pipeline steps**
-1. **Preprocessing:** one-hot encoding of categorical columns; numeric columns pass through unchanged.
-2. **Feature selection:** a preliminary XGBoost model ranks the features by importance, and `SelectFromModel` keeps only those above the median.
-3. **Classifier:** `XGBClassifier` (gradient-boosted decision trees). Class imbalance is handled with `scale_pos_weight`, calculated as the ratio of non-churners to churners in the training data.
-
-**Hyperparameter tuning**
-`RandomizedSearchCV` samples 30 random combinations (number of trees, tree depth, learning rate, row subsampling, column subsampling) and evaluates each with 5-fold cross-validation. F1 is the optimization metric because churn data is usually imbalanced.
-
-**Evaluation and tracking**
-The best model is evaluated on the held-out test set (accuracy, precision, recall, F1, ROC-AUC). Metrics, best parameters and the full pipeline are logged to **MLflow** (Fabric experiment) and registered in the model registry as `ML_CustomerChurn-1821-xgb`. This allows a direct comparison with the Random Forest model.
-
-![Screenshot](images/ModelXGBoost.png)
-
-6. Compare Model 1 & 2
-
-### 💡 Core Metrics Explained (Churn Context)
-
-* **Precision (Alarm Accuracy):** *"When the model predicts a customer will churn, how often is it right?"*
-  * **Our Score (~50%):** Out of 100 flagged customers, 50 actually churn, while 50 are false alarms. High precision prevents wasting retention budget on happy customers.
-* **Recall (Detection Completeness):** *"Out of all customers who actually churned, how many did the model catch?"*
-  * **Our Score (~78%):** Out of 100 true churners, the model catches 78 and misses 22. High recall ensures you do not blindly lose customers to competitors.
-
-> **The Churn Rule of Thumb:** In churn prevention, **Recall is usually king**. It is far cheaper to offer a loyalty discount to a happy customer (False Positive) than to permanently lose a customer because the model missed them (False Negative).
-
-
-![Screenshot](images/ML_Compare.png)
-
-7. Use of Fairlearn for Fairness
-
-### Fairness Check (Fairlearn)
-
-This step checks whether the best model (XGBoost) treats groups defined by a sensitive attribute (here: gender) differently. Fairness is evaluated on the held-out test set with **Fairlearn**.
-
-**Metrics per group**
-`MetricFrame` calculates accuracy and selection rate (share of customers predicted to churn) separately for each group. Large gaps between groups are a warning sign.
-
-**Fairness metrics**
-- **Demographic Parity Difference:** largest difference in selection rate between groups. 0 means all groups are flagged as churners at the same rate.
-- **Equalized Odds Difference:** largest difference between groups in true positive rate or false positive rate, whichever is bigger. 0 means the model makes errors at equal rates across groups.
-
-Values close to 0 are better. Values above roughly 0.1 usually deserve a closer look, but the acceptable level depends on the use case.
-
-**Tracking**
-Both fairness metrics are logged to **MLflow** in a separate run (`xgboost_fairness`), so fairness results are documented next to the performance metrics of the model.
-
-![Screenshot](images/Fairlearn.png)
-
-![Screenshot](images/Fairlearn_result.png)
-
-
-### 7. Summary & Analysing the results
-
-#### 1. Hyperparameter Optimization Strategy
-To find the optimal configuration for each algorithm, separate **`RandomizedSearchCV`** loops were executed with 5-fold cross-validation (`cv=5`) over 30 iterations. 
-
-```python
-# Optimization setup used for tuning
-search_rf = RandomizedSearchCV(
-    pipeline_rf, param_dist_rf, n_iter=30, cv=5,
-    scoring="f1", n_jobs=-1, random_state=42
-)
-
-search_xgb = RandomizedSearchCV(
-    pipeline_xgb, param_dist_xgb, n_iter=30, cv=5,
-    scoring="f1", n_jobs=-1, random_state=42
-)
-```
-
-**Strategic Choice:**
-* **F1-Score Optimization:** Both searches optimized for `scoring="f1"` (the harmonic mean of Precision and Recall). Because our dataset consists of static snapshots without time-series trends, maximizing the F1-score ensures the models natively learn to balance detection performance against the cost of false alarms.
+</details>
 
 ---
 
-#### 2. Evaluation Matrix & Results
-The tuned models yielded the following performance metrics on the test dataset:
+## 4. Power BI Report
 
-| Model | Accuracy | Precision | Recall | F1-Score | AUC |
+The report shows **when** customers leave, **which contract types** are most at risk and **how much revenue** a targeted retention campaign could save. Instead of a plain churn rate it uses **survival analysis** (Kaplan-Meier) and **hazard rates** to make the time dimension visible.
+
+![Churn charts](images/PBI_ChurnCharts.png)
+
+![Transition calculator](images/PBI_Transition.png)
+
+### Key findings
+
+- Month-to-month customers carry the highest risk in the first months. Monthly churn probability peaks early, then drops
+- About three quarters of month-to-month customers have left after roughly 5 years
+- Longer contracts retain far better: 2-year contracts below 5 % churn, 1-year contracts ~15 %
+- Overall churn rate is 27 %. Churned customers have an average tenure of 18.25 months
+
+### Report pages
+
+**1. Churn Insights**
+
+| Visual | Question it answers |
+|---|---|
+| KPI cards (churn rate, average tenure of churned customers, retention rate) | How big is the problem? |
+| Kaplan-Meier survival curve by contract type | What is the probability that a customer has not churned by month *t*? |
+| Hazard rate by contract type | What is the probability of churn in month *m*, given the customer stayed until then? |
+| Insight and conclusion | What should the business do? |
+
+**2. Transition Calculator (what-if).** Two parameters drive the scenario:
+
+- **Transition rate:** share of month-to-month customers who switch to a 2-year contract
+- **Transition efficiency:** how much of the churn reduction seen in existing 2-year customers is realistically achieved after switching
+
+Output: yearly saved revenue. In the example (30 % transition, 0.35 efficiency): ~103K.
+
+### Recommendation
+
+Target month-to-month customers with up to 6 months of tenure and high monthly charges with a special offer for a 1- or 2-year contract. The calculator provides the baseline for sizing the campaign.
+
+> **Hypothesis:** an offer to switch contracts could reduce churn. Customers who choose a 2-year contract on their own are probably more loyal to begin with, so the scenario is not a forecast. The efficiency parameter makes this assumption explicit. An A/B test is the logical next step.
+
+### Data model
+
+![Star schema](images/PBI_StarSchema.png)
+
+- **Fact table** `silver CustomerChurn`: one row per customer (churn status, tenure, charges, billing and service attributes, contract type)
+- **Dimension tables** (4): `ContractType`, `InternetService`, `PaymentMethod`, `Streaming Movies`. One-to-many to the fact table, single-direction filtering
+- **Source table** `customerchurn` with load metadata (`load_date`, `load_timestamp`)
+- **What-if tables** `MtM_CustomerChurn_Reduction` and `Transition efficiency`: disconnected parameter tables feeding the scenario measure
+- **Measure table** for report measures such as `#Customers`
+
+### Key DAX measures
+
+| Measure | Purpose |
+|---|---|
+| `Customers`, `Churned Customers`, `Churn Rate` | Base KPIs |
+| `AvgTenureCustomerChurned` | Average tenure of churned customers |
+| `Retention Rate (KM)` | Kaplan-Meier survival probability up to the selected month (product of monthly survival factors) |
+| `Hazard Rate` | Churns in month *m* divided by customers still at risk in month *m* |
+| `Saved Revenue (Scenario)` | Churned monthly revenue of month-to-month customers × transition rate × efficiency × relative churn gap to 2-year contracts |
+
+### Methodological notes
+
+- **Censoring:** active customers with short tenure have not churned *yet*. Kaplan-Meier handles this correctly, a simple churn rate does not
+- **Small samples:** curves are hidden when fewer than 30 customers remain at risk. Hazard spikes at long tenures should not be over-interpreted
+
+---
+
+## 5. ML Model
+
+Notebook: `notebooks/ML_CustomerChurn-1821.ipynb`
+
+![Data preparation](images/DDI_Model_DataPrep.png)
+
+![Drift baseline](images/DDI_ML_Baseline.png)
+
+### Approach
+
+Two tree ensembles are compared: **RandomForest** (bagging) and **XGBoost** (boosting). Churn data is structured and tabular, where tree ensembles usually perform well without heavy preprocessing. Each model is one scikit-learn `Pipeline`, so every step is fitted on training data only (no leakage):
+
+1. One-hot encoding of categorical columns, numeric columns unchanged
+2. Feature selection: an XGBoost model ranks features, `SelectFromModel` keeps those above the median
+3. Classifier
+   - RandomForest with `class_weight="balanced"`
+   - XGBoost with `scale_pos_weight` (ratio of non-churners to churners)
+
+### Tuning and tracking
+
+`RandomizedSearchCV` with 30 iterations, 5-fold cross-validation and `scoring="f1"` for both models. F1 balances detection against false alarms during tuning. The final selection then prioritises recall (see below). Parameters, metrics and the full pipeline are logged to MLflow and registered as `ML_CustomerChurn-1821-rf` and `ML_CustomerChurn-1821-xgb`.
+
+![RandomForest run](images/ModelRF.png)
+
+![XGBoost run](images/ModelXGBoost.png)
+
+### Results (held-out test set, n = 1,001)
+
+| Model | Accuracy | Precision | Recall | F1 | AUC |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **RandomForest** | 0.724 | 0.487 | **0.781** | 0.600 | **0.827** |
-| **XGBoost** | **0.736** | **0.501** | 0.770 | **0.607** | **0.827** |
+| RandomForest | 0.724 | 0.487 | **0.781** | 0.600 | 0.827 |
+| XGBoost | **0.736** | **0.501** | 0.770 | **0.607** | 0.827 |
 
-##### 💡 Core Metrics Quick Reference
-* **Precision (Alarm Accuracy):** *When the model flags a customer, how often is it right?* At ~50%, out of 100 flagged customers, 50 actually churn, while 50 are false alarms.
-* **Recall (Detection Completeness):** *Out of all customers who actually churn, how many did we catch?* At ~78%, out of 100 true churners, the model successfully alerts us to 78 and misses 22.
+![Model comparison](images/ML_Compare.png)
 
----
+- **Precision (≈ 49 %):** of 100 flagged customers, about 49 actually churn
+- **Recall (≈ 78 %):** of 100 true churners, the model catches about 78 and misses 22
 
-#### 3. Business Analysis & Model Selection
-While **XGBoost** achieved a marginally higher F1-Score (+0.007) and slightly sharper Precision, **RandomForest was selected as the final production model** based on the economic realities of the Telecommunications sector.
+### Model selection
 
-##### The Telco Churn Asymmetry (Business Case Simulation)
-In telecom, customer acquisition costs (CAC) are notoriously high. Industry benchmarks show that **retaining an existing subscriber is roughly 5x cheaper than acquiring a new one**. 
+The models are practically tied: identical AUC, F1 differs by 0.007. RandomForest was selected because of its slightly higher recall, on the assumption that a missed churner is more expensive than a wasted retention offer.
 
-To illustrate why **RandomForest** is the financially superior choice despite lower precision, consider a sample cohort of **10,000 customers** with a **10% baseline churn rate (1,000 actual churners)**:
+**Illustrative cost check.** Assumptions (not measured): cohort of 10,000 customers at the observed 27 % churn rate (2,700 churners), missed churner USD 250, false-alarm offer USD 50. Counts are derived from the test-set recall and precision.
 
-* **Cost of False Negative (Missed Churner):** \$250 (Replacement / Acquisition Cost)
-* **Cost of False Positive (False Alarm Retention Offer):** \$50 (Retention Discount / Incentive)
+| | RandomForest | XGBoost |
+|---|---:|---:|
+| Caught churners (TP) | 2,109 | 2,079 |
+| Missed churners (FN) | 591 | 621 |
+| False alarms (FP) | 2,222 | 2,071 |
+| **Total cost (USD)** | **258,850** | **258,800** |
 
-| Metric / Financial Impact | RandomForest | XGBoost | Business Impact |
-| :--- | :---: | :---: | :--- |
-| **True Positives (Caught Churners)** | **781** | 770 | RF saves **11 more contracts** |
-| **False Negatives (Missed Churners)** | **219** | 230 | RF avoids **11 lost customers** |
-| **False Positives (False Alarms)** | 823 | **767** | XGB saves 56 promo payouts |
-| **Total Churn Cost (Missed + Promo)** | **\$95,900** | **\$95,850** | **Statistical Tie** |
+Cost does not separate the two models (difference < 0.1 %). XGBoost would be an equally defensible choice. A cost-based decision threshold (see [7](#7-limitations-and-next-steps)) would matter more than the model choice.
 
-##### Strategic Conclusion
-1. **Identical Discriminative Power:** Both models share an identical **AUC of 0.827**, proving they possess the exact same underlying predictive capacity.
-2. **Risk Mitigation:** RandomForest's higher Recall (**78.1% vs. 77.0%**) proactively protects subscriber volume. In a competitive telecom market, preserving market share and preventing subscriber migration to competitors heavily outweighs the minor campaign budget saved by XGBoost's precision.
+### Fairness check (Fairlearn, gender)
 
----
+**[TODO: confirm which model was evaluated. The original section 6.6 stated XGBoost, the results section stated RandomForest. Adjust the wording below to match the notebook.]**
 
-#### 4. Next Steps for Optimization
-* **Decision Threshold Tuning:** Manually shift the classification threshold post-training to trade a bit of Precision for an artificial boost in Recall (targeting >85%).
-* **Feature Expansion:** Introduce engineered ratio features (e.g., total interactions normalized by total contract length) to better capture "silent churners" within static snapshot data.
-* **Cost-Centric Scoring:** Experiment with a custom scoring function in `RandomizedSearchCV` that applies explicit financial weights (\$250 vs \$50) to False Negatives and False Positives instead of a generic F1-score.
+Evaluated on the held-out test set with `MetricFrame` (group sizes: 502 and 499). Both fairness metrics are logged to MLflow in a separate run.
 
-
-#### 5. Fairness & Bias Assessment (Fairlearn)
-A fairness evaluation was conducted across the gender attribute (`cr8b0_gender`) using the `Fairlearn` framework to ensure equitable model behavior across demographic groups (Sample sizes: Group 0 = 502, Group 1 = 499).
-
-| Metric | Group 0 | Group 1 | Absolute Difference |
+| Metric | Group 0 | Group 1 | Difference |
 | :--- | :---: | :---: | :---: |
-| **Accuracy** | 0.7371 | 0.7355 | **0.0016** |
-| **Selection Rate** | 0.4124 | 0.4008 | **0.0115** |
-| **True Positive Rate (Recall)** | 0.7820 | 0.7576 | **0.0244** |
-| **False Positive Rate** | 0.2791 | 0.2725 | **0.0067** |
+| Accuracy | 0.7371 | 0.7355 | 0.0016 |
+| Selection rate | 0.4124 | 0.4008 | 0.0115 |
+| True positive rate (recall) | 0.7820 | 0.7576 | 0.0244 |
+| False positive rate | 0.2791 | 0.2725 | 0.0067 |
 
-##### Fairness Analysis & Insights
-The model demonstrates an **exceptionally high level of fairness** and satisfies standard algorithmic equity criteria:
+- **Demographic parity difference:** 0.0115
+- **Equalized odds difference:** 0.0244 (the larger of the TPR and FPR gaps)
+- Both are well below the ~0.1 level at which a closer look is usually recommended
 
-* **Demographic Parity (Selection Rate):** The demographic parity difference is only **1.15%**. Both gender groups have an almost equal probability of being flagged for churn and receiving retention offers.
-* **Equal Opportunity (TPR / Recall):** The model successfully catches 78.2% of churners in Group 0 and 75.8% in Group 1. The minor variance of **2.44%** is well within acceptable industry thresholds (typically <5%), meaning the model does not systematically fail to protect one specific demographic group from churning.
-* **Predictive & Error Equality:** Both overall Accuracy (0.16% delta) and False Positive Rates (0.67% delta) are virtually identical, confirming that the model's error profile is stable and unbiased.
+**Caveats:** only one attribute was assessed. With about 500 customers per group (roughly 130 churners each at 27 % churn), gaps of this size cannot be statistically distinguished from zero. No mitigation was applied. **[TODO: add bootstrap 95 % confidence intervals for the gaps, or remove this reference.]**
 
-No mitigation steps (e.g., Fairlearn's `ExponentiatedGradient` or `ThresholdOptimizer`) are required, as the unmitigated RandomForest model inherently maintains demographic and predictive fairness.
+![Fairlearn](images/Fairlearn.png)
 
-
-
-## 🎓 8. Skills Demonstrated
-
-✅ **Modern Data Architecture**
-- Medallion pattern (Bronze/Silver/Gold)
-- Lakehouse design
-
-✅ **Data Engineering**
-- Fabric Data Factory pipelines
-- Data validation with Great Expectations
-- Python data transformation
-- Delta Lake operations
-- Incremental loading strategies
-
-✅ **Analytics & BI**
-- Star schema dimensional modeling
-- Advanced DAX (20+ measures)
-- Performance optimization
-
-✅ **Security & Governance**
-- Row-Level Security (RLS) implementation
-- Object-Level Security (OLS)
-- Impact analysis & lineage
-- Workspace management
-- Audit & compliance
-- ISO 42001 conformity with MlFlow, Great Expectations, Fairlearn and Evidently
-
-✅ **DevOps & Deployment**
-- Multi-workspace strategy (Dev/Test/Prod)
-- Controlled code promotion
-- Git integration
-- Change management
-- Monitoring & SLA tracking
-
-✅ **Python & Data Science**
-- DataWrangler for exploration
-- pandas transformation
-- Data visualization with matplotlib and seaborn
-- ML-ready feature engineering
-- Notebook orchestration
-
-
-## 🚀 Quick Start (5 Minutes)
-
-### Prerequisites
-- Microsoft Fabric workspace (free trial available)
-- Power BI Desktop
-- Python 3.8+ 
-- Great Expectations 1.22.0
-- Fairlearn 0.10.0
-- Evidently 0.4.25
-
-
-
-
-## 📄 License
-
-MIT License - Feel free to fork and adapt.
-
+![Fairlearn result](images/Fairlearn_result.png)
 
 ---
 
-**Last Updated**: 2026-09-24
-**Architecture Strategy**: Gold-Only for Test/Prod (Simplified & Cost-Optimized)  
-**Status**: Production Ready
+## 6. Governance and ISO 42001 Mapping
+
+ISO 42001 is a management-system standard for organisations. The tools below produce evidence that **supports** selected controls. They do not establish conformity on their own. The mapping is indicative.
+
+| Tool | What it does here | ISO 42001 reference |
+|---|---|---|
+| Great Expectations | Quality gate between Bronze and Silver, checkpoints as evidence | Annex A.4.3 (data resources), A.7.4 (quality of data) |
+| MLflow | Logs every training run, versions and registers models | Clause 7.5 (documented information), A.6.2.4 (verification and validation) |
+| Fairlearn | Group-level fairness metrics per model | Annex A.5 (assessing impacts of AI systems) |
+| Evidently | Drift detection, trigger for retraining | Annex A.6.2.6 (operation and monitoring) |
+
+Operational controls in the platform: separate Dev/Test/Prod workspaces, workspace roles, retries and email notification per pipeline run.
+
+**[TODO: add the Row-Level Security role definition with a screenshot, or leave RLS out. The original section was unfinished.]**
+
+---
+
+## 7. Limitations and Next Steps
+
+**Known limitations**
+
+- Demo data: public dataset with artificially removed values, Power App usage simulated
+- Static snapshot: drift and retraining logic is demonstrated, not proven on real time-series data
+- No Logistic Regression baseline, so 0.827 AUC is not benchmarked against a simple model
+- Metrics come from one test split of 1,001 customers, without confidence intervals
+- Decision threshold is the default (0.5), not cost-optimised
+- One fairness attribute, small groups
+- No automated tests for notebooks
+
+**Next steps**
+
+- Logistic Regression baseline, class-imbalance handling, cost-based threshold optimisation (retention offer vs. missed churner)
+- SHAP explanations for individual customers, probability calibration
+- Write churn scores back to Dataverse and trigger retention campaigns with Power Automate
+- A/B test retention offers
+- Automated notebook tests and CI checks, alerts for pipeline failures, data-quality violations and drift
+- Fabric Data Warehouse as serving layer (T-SQL access, write-back, centrally managed row/column-level security)
+- Near-real-time ingestion with Eventstreams, further data sources (CRM, billing, support)
+- Fairness monitoring for additional segments
+
+---
+
+## 8. How to Reproduce
+
+The solution runs inside Microsoft Fabric and Power Platform and cannot be run locally. Requirements: a Fabric workspace with capacity (trial is sufficient) and a Power Platform environment with Dataverse.
+
+1. Create the Dataverse table `customerchurn` and import `data/raw/customerchurn_withmissing_data.csv`
+2. Create the Fabric workspaces (Dev, Test, Prod) and a Lakehouse with Bronze, Silver and Gold layers
+3. Create a Fabric environment with the external libraries shown in section 3 and attach it to all notebooks
+4. Import the notebooks from `notebooks/`
+5. Build the Data Factory pipeline (copy job, notebooks in the order shown in the pipeline screenshot, retries, email notification) and schedule it for 6 AM
+6. Connect the Power BI semantic model to the Gold/Silver tables and publish the report
+
+---
+
+## 9. Skills Demonstrated
+
+- **Data engineering:** medallion architecture, Fabric Data Factory pipelines, Lakehouse (Delta), Python/pandas transformation, data validation with Great Expectations
+- **Analytics and BI:** star schema, DAX including Kaplan-Meier and hazard-rate measures, what-if scenario modelling, Power Query
+- **Data science:** scikit-learn pipelines, feature selection, hyperparameter tuning, MLflow tracking and model registry, drift detection with Evidently
+- **Responsible AI:** fairness assessment with Fairlearn, ISO 42001 control mapping
+- **Delivery:** Dev/Test/Prod deployment pipeline, Git versioning, scheduled and monitored pipeline runs
+- **Power Platform:** Power Apps and Dataverse as source system
+
+---
+
+## License
+
+MIT License. The dataset originates from IBM (see link in section 2).
+
+**Last updated:** 2026-09-30
