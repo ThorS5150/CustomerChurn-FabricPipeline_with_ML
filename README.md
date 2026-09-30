@@ -4,6 +4,10 @@
 
 An end-to-end, automated churn solution: employees capture customer data in a Power App, a daily Fabric pipeline validates it, checks the model for drift, retrains when needed and refreshes the Power BI reports. Built on the public IBM Telco dataset, so this is a **portfolio project on demo data**, not a production system.
 
+**Demo:**
+
+![Demo](images/churn_demo_en.png)
+
 ## Architecture at a Glance
 
 ![Architecture](images/architecture.png)
